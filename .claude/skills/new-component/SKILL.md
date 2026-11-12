@@ -1,0 +1,73 @@
+---
+name: new-component
+description: Создать новый React-компонент по правилам Simple Architecture (папка, index.ts, view, презентер, стили). Используй всегда, когда нужно добавить компонент, а также когда файл view перерос лимит и из него выделяется дочерний компонент.
+---
+
+# Новый компонент
+
+Аргументы: имя компонента и (необязательно) родитель или назначение. Пример: `/new-component ShowCard в ShowList`.
+
+## 1. Определи место
+
+Прочитай `docs/ai/structure.md`, раздел «Куда положить компонент», и выбери папку:
+
+- нужен одному родителю → `Parent/components/Name/`
+- нужен нескольким компонентам одной ветки → `components/` ближайшего общего предка
+- нужен в разных ветках → `src/components/Name/`
+- «глупый» кирпичик без логики и домена → `src/components/ui/Name/`
+- сам добывает данные (экран, виджет) → `src/Name/`
+
+Если место неочевидно — спроси пользователя, не угадывай.
+
+## 2. Создай файлы
+
+`index.ts`
+```ts
+export { Name } from './Name';
+```
+
+`Name.tsx` — только JSX и вызов презентера:
+```tsx
+import styles from './Name.module.scss';
+import { useName } from './useName';
+
+export interface NameProps {
+  // ...
+}
+
+export function Name(props: NameProps) {
+  const { title, isActive, onToggle } = useName(props);
+
+  return (
+    <section className={styles.root}>
+      {/* JSX */}
+    </section>
+  );
+}
+```
+
+`useName.ts` — вся логика:
+```ts
+import type { NameProps } from './Name';
+
+export function useName({ ... }: NameProps) {
+  // состояние, производные данные, обработчики
+  return { title, isActive, onToggle };
+}
+```
+
+`Name.module.scss` — только если нужны стили; значения — через CSS-переменные из `src/styles/tokens.scss`.
+
+Исключения:
+- `components/ui/*` — без `useName.ts` вообще.
+- У компонента нет логики (пропсы → JSX) — `useName.ts` не создаётся.
+
+## 3. Проверь себя
+
+- [ ] Имя папки = имя компонента = имя `.tsx`, PascalCase.
+- [ ] В `.tsx` нет хуков React, вычислений, обработчиков с телом, импортов из `@/api` и `@/hooks`.
+- [ ] Презентер возвращает данные в готовом для JSX виде (флаги `is*`, обработчики `on*`).
+- [ ] Каждый файл ≤ 120 строк.
+- [ ] Чистые функции и хуки с логикой покрыты тестом `*.test.ts` рядом.
+- [ ] Родитель импортирует компонент через папку: `./components/Name`.
+- [ ] `pnpm check` зелёный.

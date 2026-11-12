@@ -1,0 +1,62 @@
+// Design tokens. Source of truth: Figma file "TV Shows Explorer", collection "Tokens".
+// Component styles use only these variables, never raw values.
+:root {
+  color-scheme: dark;
+
+  // Colors
+  --color-bg: #0e0c0a;
+  --color-surface: #191512;
+  --color-surface-raised: #241d17;
+  --color-border: #3a3028;
+  --color-border-strong: #5c4c3d;
+  --color-text: #f5eee4;
+  --color-text-muted: #a99d8d;
+  --color-text-subtle: #74695c;
+  --color-accent: #f2a93b;
+  --color-accent-hover: #f7bd62;
+  --color-accent-ink: #1b1204;
+  --color-accent-glow: rgb(242 169 59 / 16%);
+  --color-danger: #e8674c;
+
+  // Typography
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: 4.75rem;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  // Spacing
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  // Shape
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --control-height-md: 52px;
+  --control-height-lg: 68px;
+  --page-button-size: 44px;
+
+  // Motion
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  // Focus
+  --focus-ring: 0 0 0 3px rgb(242 169 59 / 45%);
+}

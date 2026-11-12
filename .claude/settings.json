@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm check)",
+      "Bash(pnpm check:arch)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm build)",
+      "PowerShell(pnpm check)",
+      "PowerShell(pnpm check:arch)",
+      "PowerShell(pnpm lint)",
+      "PowerShell(pnpm typecheck)",
+      "PowerShell(pnpm test)",
+      "PowerShell(pnpm build)"
+    ]
+  }
+}
