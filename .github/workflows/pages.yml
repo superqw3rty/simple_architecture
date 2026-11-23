@@ -1,0 +1,91 @@
+name: CI & GitHub Pages
+
+# PR        -> pnpm check + build -> preview at https://<user>.github.io/<repo>/pr-preview/pr-<N>/
+# PR closed -> preview removed
+# main      -> pnpm check + build -> site root https://<user>.github.io/<repo>/
+#
+# Pages source must be "Deploy from a branch: gh-pages / (root)" (Settings -> Pages).
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # push to gh-pages
+  pull-requests: write # sticky comment with the preview link
+
+jobs:
+  check:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: check-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build
+        env:
+          BASE_PATH: >-
+            ${{ github.event_name == 'pull_request'
+              && format('/{0}/pr-preview/pr-{1}/', github.event.repository.name, github.event.number)
+              || format('/{0}/', github.event.repository.name) }}
+      - run: touch dist/.nojekyll
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          include-hidden-files: true
+          retention-days: 3
+
+  preview:
+    if: >-
+      always() && github.event_name == 'pull_request'
+      && (needs.check.result == 'success' || github.event.action == 'closed')
+    needs: check
+    runs-on: ubuntu-latest
+    concurrency:
+      group: preview-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - if: github.event.action != 'closed'
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: dist
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          qr-code: false
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          clean-exclude: pr-preview/
+          force: false # never wipe PR previews
