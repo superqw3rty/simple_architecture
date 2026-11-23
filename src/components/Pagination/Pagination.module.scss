@@ -1,3 +1,10 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .pagination {
   display: flex;
   flex-wrap: wrap;
@@ -10,9 +17,17 @@
   display: inline-flex;
   align-items: flex-end;
   justify-content: center;
-  width: var(--space-5);
-  height: var(--page-button-size);
+  width: var(--space-6);
+  height: var(--control-height-sm);
   padding-bottom: var(--space-2);
   color: var(--color-text-subtle);
   font-weight: var(--weight-bold);
+}
+
+// Figma: 13px, brought to the 12px step of the text scale.
+.caption {
+  color: var(--color-text-subtle);
+  font-size: var(--text-3);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-4);
 }

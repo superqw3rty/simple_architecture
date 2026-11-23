@@ -38,6 +38,7 @@ ShowList/
 - Презентер называется `use` + имя компонента: `useShowList.ts`.
 - Импорт компонента — всегда через папку: `import { ShowList } from './components/ShowList'`. В `index.ts` только реэкспорт, логики там нет.
 - Наружу папка отдаёт только компонент (и, при необходимости, тип его пропсов). Хуки и хелперы компонента — приватные, соседи их не импортируют.
+- Скелетон загрузки — дочерний компонент того, что он изображает: `ShowList/components/ShowListSkeleton/`. Это единственное, что `index.ts` отдаёт наружу помимо самого компонента: `export { ShowListSkeleton } from './components/ShowListSkeleton'` (D-31). Общая раскладка компонента и его скелетона — SCSS-partial с миксинами в папке компонента (`ShowList/_grid.scss`), а не импорт чужого `.module.scss`.
 - Только именованные экспорты, `export default` не используем.
 
 ## Куда положить компонент — дерево решений
@@ -67,7 +68,7 @@ ShowList/
 | Чистая функция общего назначения | `src/utils/` |
 | Доменный тип (`Show`) | `src/types/` |
 | Тип ответа сервера | `src/types/api/<service>.ts` |
-| Запрос к серверу, маппер | `src/api/<service>/` |
+| Запрос к серверу, маппер, фабрика запросов (`queryKey`/`queryFn`) | `src/api/<service>/` |
 | Тип, нужный одному компоненту или хуку | `types.ts` в его папке, не в `src/types` |
 | Константа одного компонента | в файле, где используется, или `constants.ts` в его папке |
 
@@ -81,16 +82,14 @@ src/hooks/
     index.ts                    # export { useDebouncedValue } from './useDebouncedValue';
     useDebouncedValue.ts
     useDebouncedValue.test.ts
-  useRequest/
+  useSomething/                 # хук из нескольких файлов
     index.ts                    # публичный API хука
-    useRequest.ts
-    fetchEntry.ts               # внутренние части — снаружи не импортируются
-    requestCache.ts
-    types.ts
+    useSomething.ts
+    parts.ts                    # внутренние части — снаружи не импортируются
     README.md                   # обязателен для хука из нескольких файлов
 ```
 
-- Импорт — через папку: `import { useRequest } from '@/hooks/useRequest'`.
+- Импорт — через папку: `import { useDebouncedValue } from '@/hooks/useDebouncedValue'`.
 - Экспортируемый хук имеет JSDoc: что делает, неочевидное поведение, `@example`.
 - Хук из нескольких файлов или с нетривиальным поведением получает `README.md`: параметры, результат, сценарии, ограничения.
 
@@ -111,4 +110,4 @@ src/types/
 
 ## Автопроверка
 
-`pnpm check:arch` (`scripts/check-architecture.mjs`) проверяет: `index.ts` и `Имя.tsx` в каждой папке компонента, один `.tsx` на папку, PascalCase, отсутствие хуков в `components/ui`, длину SCSS, «один хук — одна папка» в `src/hooks`. Добавляешь структурное правило — добавь проверку в скрипт.
+`pnpm check:arch` (`scripts/check-architecture.mjs`) проверяет: `index.ts` и `Имя.tsx` в каждой папке компонента, что в `index.ts` только реэкспорты, один `.tsx` на папку, PascalCase, отсутствие хуков в `components/ui`, длину SCSS, «один хук — одна папка» в `src/hooks`. Добавляешь структурное правило — добавь проверку в скрипт.

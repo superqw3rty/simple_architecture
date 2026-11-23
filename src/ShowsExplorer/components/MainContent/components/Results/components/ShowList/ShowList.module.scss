@@ -1,0 +1,10 @@
+@use './grid' as *;
+
+.showList {
+  @include show-grid;
+}
+
+// A grid inside the item stretches the card to the row height, as when the card was the grid cell.
+.item {
+  display: grid;
+}

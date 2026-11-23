@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import type { FC, InputHTMLAttributes, ReactNode } from 'react';
 import styles from './TextInput.module.scss';
 
 type NativeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'size'>;
@@ -8,16 +8,15 @@ export interface TextInputProps extends NativeInputProps {
   label: string;
   /** Decorative element shown before the text, e.g. an icon. */
   icon?: ReactNode;
-  size?: 'md' | 'lg';
 }
 
 /** A single-line text field. Value and onChange are the native input props. */
-export function TextInput({ label, icon, size = 'md', type = 'text', ...rest }: TextInputProps) {
+export const TextInput: FC<TextInputProps> = ({ label, icon, type = 'text', ...rest }) => {
   return (
-    <label className={styles.field} data-size={size}>
+    <label className={styles.field}>
       <span className={styles.label}>{label}</span>
       {icon}
       <input {...rest} type={type} className={styles.input} />
     </label>
   );
-}
+};

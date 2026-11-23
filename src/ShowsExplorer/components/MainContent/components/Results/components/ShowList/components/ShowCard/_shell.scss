@@ -1,0 +1,32 @@
+@use './variants' as *;
+
+// The card frame and the poster box, shared by ShowCard, its CardImage and ShowCardSkeleton,
+// so the skeleton keeps exactly the card layout and nothing jumps when the data arrives.
+
+@mixin card-shell {
+  padding: var(--space-5);
+  gap: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+// Poster on the left, text on the right.
+@mixin card-header {
+  display: flex;
+  gap: var(--space-4);
+}
+
+@mixin poster-size {
+  flex-shrink: 0;
+
+  @include card-compact {
+    width: var(--poster-width-compact);
+    height: var(--poster-height-compact);
+  }
+
+  @include card-default {
+    width: var(--poster-width-default);
+    height: var(--poster-height-default);
+  }
+}

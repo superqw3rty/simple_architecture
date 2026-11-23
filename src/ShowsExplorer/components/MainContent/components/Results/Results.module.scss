@@ -1,0 +1,31 @@
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+
+  @include screen-below(tablet) {
+    font-size: var(--text-8);
+    line-height: var(--leading-10);
+  }
+
+  @include screen-from(tablet) {
+    font-size: var(--text-11);
+    line-height: var(--leading-13);
+  }
+}
+
+// Figma: the hint is on tablet and desktop only, a phone shows the chips right under the title.
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-4);
+  line-height: var(--leading-6);
+
+  @include screen-below(tablet) {
+    display: none;
+  }
+}

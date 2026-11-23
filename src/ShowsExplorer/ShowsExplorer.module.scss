@@ -1,0 +1,5 @@
+// At least one screen tall: MainContent fills what the header leaves,
+// and the error / empty message centers in that space (Figma: Error, Empty).
+.explorer {
+  min-height: 100dvh;
+}

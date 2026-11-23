@@ -1,0 +1,15 @@
+.eyebrow {
+  color: var(--color-accent);
+  font-size: var(--text-3);
+  line-height: var(--leading-4);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+
+  &[data-size='small'] {
+    letter-spacing: var(--tracking-wide);
+  }
+
+  &[data-size='medium'] {
+    letter-spacing: var(--tracking-wider);
+  }
+}

@@ -20,7 +20,7 @@
 - Менеджер пакетов — только pnpm. `package-lock.json` и `yarn.lock` не создаём. Lockfile коммитится.
 - Build-скрипты зависимостей по умолчанию выключены; разрешения — в `pnpm-workspace.yaml` (`allowBuilds`), с комментарием зачем.
 - Обновление мажорных версий — отдельной задачей с прогоном `pnpm check`.
-- Не добавляем: UI-киты, CSS-in-JS, lodash/moment и аналоги, state-менеджеры и query-библиотеки — пока в реестре «Кандидаты» не выполнено условие.
+- Не добавляем: UI-киты, CSS-in-JS, lodash/moment и аналоги, state-менеджеры, вторую query-библиотеку — пока в реестре «Кандидаты» не выполнено условие.
 
 ## Реестр
 
@@ -29,6 +29,7 @@
 | Пакет | Зачем | Альтернативы | Как заменить |
 |---|---|---|---|
 | `react`, `react-dom` | UI | — | — |
+| `@tanstack/react-query` | кэш, отмена, дедупликация и повторы запросов (D-22) | свой `useRequest` (был до D-22), SWR | импортируется только в `src/api/queryClient.ts`, фабриках `*Queries.ts`, `QueryProvider` и фичевых хуках |
 
 ### Dev
 
@@ -38,6 +39,7 @@
 | `typescript` | типы | закреплён на 6.x: `typescript-eslint` 8 не поддерживает TS 7 |
 | `sass-embedded` | SCSS Modules | |
 | `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `globals` | линт и правила архитектуры | конфиг: `eslint.config.js` |
+| `eslint-plugin-react` | только `react/jsx-key`: `key` у элементов списка (D-32) | peer-зависимость объявлена до ESLint 9.7, на ESLint 10 правило проверено и работает; `settings.react.version` задан явно — автоопределение версии использует API, удалённые в ESLint 10. Если плагин сломается на обновлении ESLint — заменить на `@eslint-react/eslint-plugin` (`no-missing-key`) |
 | `prettier` | форматирование | конфиг: `.prettierrc.json`; `eslint-config-prettier` не нужен — стилевых правил ESLint, кроме `curly`, нет |
 | `vitest`, `jsdom` | тесты | |
 | `@testing-library/react` | `renderHook` для тестов хуков | view не тестируем |
@@ -47,7 +49,7 @@
 
 | Пакет | Условие добавления | Что заменит |
 |---|---|---|
-| `@tanstack/react-query` | мутации с инвалидацией, серверная пагинация, фоновый refetch, devtools | `src/hooks/useRequest` (см. `data-fetching.md`) |
+| `@tanstack/react-query-devtools` (dev) | понадобится отлаживать кэш | — |
 | `react-router` | появится второй экран или состояние в URL | — |
 | `zod` | недоверенные или сложные ответы API | ручные мапперы в `src/api` |
 | `clsx` | условные классы станут массовыми | шаблонные строки |

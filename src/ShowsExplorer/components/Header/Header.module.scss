@@ -1,0 +1,34 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  padding-inline: var(--page-gutter);
+
+  @include screen-below(tablet) {
+    padding-top: var(--space-5);
+  }
+
+  @include screen-from(tablet) {
+    padding-top: var(--space-6);
+  }
+}
+
+.fullHeightHeader {
+  min-height: 100dvh;
+}
+
+.compactHeader {
+  gap: var(--space-8);
+
+  @include screen-from(tablet) {
+    flex-direction: row;
+  }
+}
+
+.fullHeightHero {
+  margin-block: auto;
+  align-items: center;
+}
+
+.compactHero {
+  width: 100%;
+}

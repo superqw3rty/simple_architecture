@@ -8,11 +8,13 @@
 src/api/
   http.ts               # request<T>(url, { params, signal }) — единственное место с fetch
   ApiError.ts           # ApiError(status), isAbortError()
+  queryClient.ts        # createQueryClient(): дефолты TanStack Query, политика повторов
   tvmaze/               # один внешний сервис = одна папка
     config.ts           # BASE_URL и константы сервиса
     mapShow.ts          # ответ сервера → доменная модель
     searchShows.ts      # один эндпоинт = один файл = одна функция
-    index.ts            # наружу: только функции эндпоинтов
+    showQueries.ts      # фабрика запросов: queryKey + queryFn + enabled + staleTime
+    index.ts            # наружу: функции эндпоинтов и фабрики запросов
 src/types/
   show.ts               # доменная модель Show — то, с чем работает приложение
   api/
@@ -27,12 +29,13 @@ src/types/
 2. **Каждая функция эндпоинта принимает `signal`** последним аргументом и пробрасывает его в `request` — без этого не работает отмена.
 3. **Наружу — только доменные модели.** Типы из `@/types/api` используются только внутри `src/api` и не попадают в хуки и компоненты. Сервер переименовал поле — меняется один маппер.
 4. **Маппер терпим к данным**: любое поле может прийти `null` или отсутствовать. Маппер подставляет значения по умолчанию (`genres ?? []`, `image?.medium ?? null`), чистит HTML (`stripHtml`), приводит форматы (год из даты).
-5. **Ошибки — всегда `ApiError`** с понятным пользователю `message` и `status`. `AbortError` пробрасывается как есть, его обрабатывает `useRequest`.
-6. **Вызывать API можно только из хуков** через `useRequest` (см. `data-fetching.md`). View и чистые функции API не вызывают.
-7. **API-слой не импортирует** `react`, компоненты, хуки. Зависимость направлена только внутрь: `hooks → api → types`.
+5. **Ошибки — всегда `ApiError`** с понятным пользователю `message` и `status`. `AbortError` пробрасывается как есть — TanStack Query распознаёт отмену сам.
+6. **Из React API вызывается только через фабрику запросов** и `useQuery` в хуке (см. `data-fetching.md`). View и чистые функции API не вызывают.
+7. **API-слой не импортирует** `react`, компоненты, хуки. Из `@tanstack/react-query` — только `QueryClient` и `queryOptions` (обычные функции без React). Зависимость направлена только внутрь: `hooks → api → types`. Проверяет ESLint.
 8. URL и параметры не склеиваются руками — параметры передаются в `request(url, { params })`.
+9. **Фабрика запросов** `<entity>Queries.ts` — объект с методами: уровни ключа (`all()`, `searches()`) и `queryOptions` на каждый эндпоинт. `queryFn` пробрасывает `signal` из контекста запроса.
 
-## Пример эндпоинта
+## Пример эндпоинта и фабрики
 
 ```ts
 // src/api/tvmaze/searchShows.ts
@@ -50,6 +53,19 @@ export async function searchShows(query: string, signal?: AbortSignal): Promise<
 
   return results.map((result) => mapShow(result.show));
 }
+
+// src/api/tvmaze/showQueries.ts
+export const showQueries = {
+  all: () => ['shows'] as const,
+  searches: () => [...showQueries.all(), 'search'] as const,
+  search: (term: string) =>
+    queryOptions({
+      queryKey: [...showQueries.searches(), term] as const,
+      queryFn: ({ signal }) => searchShows(term, signal),
+      enabled: term.length > 0,
+      staleTime: 5 * 60_000,
+    }),
+};
 ```
 
 ## Модели
@@ -62,6 +78,7 @@ export async function searchShows(query: string, signal?: AbortSignal): Promise<
 
 - Мапперы — обязательные юнит-тесты, включая «дырявый» DTO.
 - Функции эндпоинтов тестируются с `vi.stubGlobal('fetch', ...)`: правильный URL и параметры, маппинг ответа.
+- Фабрики запросов: форма ключа, `enabled` и — через `new QueryClient().fetchQuery(...)` — что `signal` дошёл до `fetch`.
 
 ## Рантайм-валидация
 

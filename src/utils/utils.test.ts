@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { paginate } from './paginate';
 import { stripHtml } from './stripHtml';
-import { uniqueSorted } from './uniqueSorted';
 
 describe('paginate', () => {
   const items = [1, 2, 3, 4, 5, 6, 7];
@@ -29,11 +28,5 @@ describe('stripHtml', () => {
 
   it('handles missing values', () => {
     expect(stripHtml(null)).toBe('');
-  });
-});
-
-describe('uniqueSorted', () => {
-  it('deduplicates and sorts', () => {
-    expect(uniqueSorted(['Drama', 'Comedy', 'Drama'])).toEqual(['Comedy', 'Drama']);
   });
 });

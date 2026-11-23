@@ -1,0 +1,27 @@
+@use '@/styles/breakpoints' as *;
+
+// ShowCard variants from Figma (component set ShowCard, property Size).
+//   Compact: poster 126 × 177. Mobile, and the narrow three-column range from desktop to wide.
+//   Default: poster 168 × 236. One wide card on tablet, and three columns from wide.
+// The ranges are not contiguous, so each variant is a pair of disjoint media queries.
+// Use in ShowCard and its children: @use '<path>/variants' as *; then @include card-compact { ... }.
+
+@mixin card-compact {
+  @include screen-below(tablet) {
+    @content;
+  }
+
+  @include screen-between(desktop, wide) {
+    @content;
+  }
+}
+
+@mixin card-default {
+  @include screen-between(tablet, desktop) {
+    @content;
+  }
+
+  @include screen-from(wide) {
+    @content;
+  }
+}

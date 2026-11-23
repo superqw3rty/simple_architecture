@@ -24,7 +24,7 @@ const toViewItem = (item: PageItem, index: number, page: number, goTo: (p: numbe
   };
 };
 
-export function usePagination({ page, totalPages, onChange }: PaginationProps) {
+export function usePagination({ page, totalPages, caption, onChange }: PaginationProps) {
   const items = useMemo(
     () =>
       getPageItems(page, totalPages).map((item, index) => toViewItem(item, index, page, onChange)),
@@ -33,6 +33,7 @@ export function usePagination({ page, totalPages, onChange }: PaginationProps) {
 
   return {
     isHidden: totalPages <= 1,
+    hasCaption: Boolean(caption),
     items,
     previous: { isDisabled: page <= 1, onClick: () => onChange(page - 1) },
     next: { isDisabled: page >= totalPages, onClick: () => onChange(page + 1) },

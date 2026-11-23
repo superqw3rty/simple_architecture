@@ -1,0 +1,25 @@
+@use '@/styles/breakpoints' as *;
+
+// The results grid, shared by ShowList and ShowListSkeleton.
+// A page holds 3 shows (hw1), so the list has 1 or 3 columns: with 2 every full page ends in a lone card.
+// One wide card up to desktop, three from desktop (Figma "Results": 3 at 1440, 1 on mobile and tablet).
+// Which ShowCard variant fills the columns is decided in ShowCard/_variants.scss.
+@mixin show-grid {
+  display: grid;
+
+  @include screen-below(desktop) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @include screen-from(desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include screen-below(tablet) {
+    gap: var(--space-5);
+  }
+
+  @include screen-from(tablet) {
+    gap: var(--space-6);
+  }
+}

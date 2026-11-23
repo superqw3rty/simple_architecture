@@ -55,7 +55,7 @@ describe('mapShow', () => {
       rating: null,
       year: null,
       language: null,
-      status: 'Unknown',
+      status: null,
       summary: '',
     });
   });
@@ -64,6 +64,11 @@ describe('mapShow', () => {
     const show = mapShow(dto({ name: undefined }));
 
     expect(show).toMatchObject({ name: 'Untitled', genres: [], imageUrl: null, rating: null });
+  });
+
+  it('drops a status the app does not know', () => {
+    expect(mapShow(dto({ status: 'Cancelled' })).status).toBeNull();
+    expect(mapShow(dto({ status: 'Running' })).status).toBe('Running');
   });
 
   it('returns no year for a malformed date', () => {

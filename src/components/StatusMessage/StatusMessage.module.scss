@@ -2,45 +2,54 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-  max-width: 440px;
+  gap: var(--space-5);
+  max-width: var(--status-message-max-width);
   text-align: center;
 }
 
 .symbol {
   color: var(--color-accent);
   font-family: var(--font-display);
-  font-size: var(--text-3xl);
+  font-size: var(--text-18);
   font-style: italic;
-  line-height: 1;
+  line-height: var(--leading-18);
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
-  line-height: 1.2;
+
+  @include screen-below(tablet) {
+    font-size: var(--text-8);
+    line-height: var(--leading-10);
+  }
+
+  @include screen-from(tablet) {
+    font-size: var(--text-10);
+    line-height: var(--leading-12);
+  }
 }
 
 .description {
   color: var(--color-text-muted);
-  font-size: var(--text-md);
-  line-height: 1.6;
+  font-size: var(--text-4);
+  line-height: var(--leading-6);
 }
 
 .action {
-  padding-top: var(--space-2);
+  display: flex;
 }
 
 .message[data-tone='danger'] .symbol {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--space-8);
-  height: var(--space-8);
+  width: var(--status-symbol-size);
+  height: var(--status-symbol-size);
   border: 2px solid var(--color-danger);
   border-radius: var(--radius-pill);
   color: var(--color-danger);
-  font-size: var(--text-2xl);
+  font-size: var(--text-10);
   font-style: normal;
+  line-height: var(--leading-12);
 }

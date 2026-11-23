@@ -8,7 +8,7 @@ import { mapShow } from './mapShow';
  * Finds shows by a free-text query. The server does the matching and returns
  * at most 10 shows, best match first.
  *
- * @param signal pass the one from useRequest so the call can be cancelled.
+ * @param signal pass the one from the query context (see showQueries) so the call can be cancelled.
  * @throws ApiError on a network or server failure.
  */
 export async function searchShows(query: string, signal?: AbortSignal): Promise<Show[]> {

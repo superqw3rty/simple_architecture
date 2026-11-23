@@ -22,25 +22,15 @@
     border-color: var(--color-accent);
     box-shadow: var(--focus-ring);
   }
-
-  &[data-size='lg'] {
-    height: var(--control-height-lg);
-
-    .input {
-      font-size: var(--text-lg);
-    }
-  }
 }
 
 .input {
   flex: 1;
-  min-width: 0;
   height: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--color-text);
-  font-size: var(--text-md);
   font-weight: var(--weight-medium);
 
   &::placeholder {
@@ -55,13 +45,18 @@
   &::-webkit-search-cancel-button {
     display: none;
   }
+
+  @include screen-below(tablet) {
+    font-size: var(--text-4);
+    line-height: var(--leading-6);
+  }
+
+  @include screen-from(tablet) {
+    font-size: var(--text-5);
+    line-height: var(--leading-7);
+  }
 }
 
 .label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  @include visually-hidden;
 }

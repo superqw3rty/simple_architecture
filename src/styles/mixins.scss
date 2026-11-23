@@ -1,0 +1,14 @@
+// Hides an element visually but keeps it in the accessibility tree and focus order,
+// unlike `display: none` / `visibility: hidden`. Typical use: a text label for an input.
+// Injected into every SCSS file by vite.config.ts, no manual @use needed.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

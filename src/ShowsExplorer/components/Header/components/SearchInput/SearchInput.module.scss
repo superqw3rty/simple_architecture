@@ -1,0 +1,5 @@
+// The width limit lives here, not in ui/TextInput: the field size is decided by where it is used.
+.searchInput {
+  width: 100%;
+  max-width: var(--full-search-max-width);
+}

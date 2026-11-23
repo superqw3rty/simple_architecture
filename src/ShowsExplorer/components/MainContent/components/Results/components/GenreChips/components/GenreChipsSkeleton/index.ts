@@ -1,0 +1,1 @@
+export { GenreChipsSkeleton } from './GenreChipsSkeleton';

@@ -1,0 +1,12 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-4);
+  line-height: var(--leading-6);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-subtle);
+}

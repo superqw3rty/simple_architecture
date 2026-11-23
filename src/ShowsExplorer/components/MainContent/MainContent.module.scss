@@ -1,0 +1,35 @@
+.mainContent {
+  // Takes the height the page root leaves under the header, so a status message can center in it.
+  flex: 1;
+  padding-inline: var(--page-gutter);
+
+  @include screen-below(tablet) {
+    padding-bottom: var(--space-8);
+  }
+
+  @include screen-from(tablet) {
+    padding-bottom: var(--space-16);
+  }
+}
+
+// Status messages size themselves (max-width), MainContent places them in the middle of the
+// free height. Figma: the message sits 40px above the center, i.e. 80px of space under it,
+// counting the page bottom padding (32 on mobile, 64 from tablet).
+.status {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+
+  @include screen-below(tablet) {
+    padding-bottom: var(--space-12);
+  }
+
+  @include screen-from(tablet) {
+    padding-bottom: var(--space-4);
+  }
+}
+
+.announcer {
+  @include visually-hidden;
+}

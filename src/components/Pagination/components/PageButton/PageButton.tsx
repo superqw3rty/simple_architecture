@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import styles from './PageButton.module.scss';
 
 interface PageButtonProps {
@@ -8,7 +9,13 @@ interface PageButtonProps {
   onClick?: () => void;
 }
 
-export function PageButton({ label, ariaLabel, isCurrent, isDisabled, onClick }: PageButtonProps) {
+export const PageButton: FC<PageButtonProps> = ({
+  label,
+  ariaLabel,
+  isCurrent,
+  isDisabled,
+  onClick,
+}) => {
   return (
     <button
       type="button"
@@ -21,4 +28,4 @@ export function PageButton({ label, ariaLabel, isCurrent, isDisabled, onClick }:
       {label}
     </button>
   );
-}
+};

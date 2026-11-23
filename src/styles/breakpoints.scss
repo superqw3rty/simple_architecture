@@ -1,0 +1,44 @@
+@use 'sass:map';
+
+// Viewport breakpoints. The value is where the named screen starts.
+//   @include screen-from(tablet)                { ... }  tablet and wider (desktop included)
+//   @include screen-below(tablet)               { ... }  narrower than tablet, i.e. mobile only
+//   @include screen-between(tablet, desktop)    { ... }  tablet only: from tablet up to, not including, desktop
+// Range syntax (width >= / width <) keeps the ranges disjoint exactly at the breakpoint.
+// Kept in SCSS, not CSS custom properties: var() does not work inside @media conditions.
+// Injected into every SCSS module by vite.config.ts, no manual @use needed.
+//
+// desktop and wide come from the results grid: a page holds 3 shows, so the list has 1 or 3 columns, never 2.
+//   desktop — 3 columns of the Compact ShowCard fit (card 336px, text column ≥ 150px at 1200).
+//   wide    — 3 columns of the Default ShowCard fit, the Figma desktop frame width.
+$breakpoints: (
+  tablet: 768px,
+  desktop: 1200px,
+  wide: 1440px,
+);
+
+@function breakpoint($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error 'Unknown breakpoint "#{$name}". Available: #{map.keys($breakpoints)}';
+  }
+
+  @return map.get($breakpoints, $name);
+}
+
+@mixin screen-from($name) {
+  @media (width >= breakpoint($name)) {
+    @content;
+  }
+}
+
+@mixin screen-below($name) {
+  @media (width < breakpoint($name)) {
+    @content;
+  }
+}
+
+@mixin screen-between($from, $to) {
+  @media (breakpoint($from) <= width < breakpoint($to)) {
+    @content;
+  }
+}

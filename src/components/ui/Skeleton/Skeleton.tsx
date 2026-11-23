@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import styles from './Skeleton.module.scss';
 
 export interface SkeletonProps {
@@ -8,7 +9,7 @@ export interface SkeletonProps {
 }
 
 /** A shimmering placeholder shown while the real content is loading. */
-export function Skeleton({ width = '100%', height = 16, shape = 'block' }: SkeletonProps) {
+export const Skeleton: FC<SkeletonProps> = ({ width = '100%', height = 16, shape = 'block' }) => {
   return (
     <span
       className={styles.skeleton}
@@ -17,4 +18,4 @@ export function Skeleton({ width = '100%', height = 16, shape = 'block' }: Skele
       aria-hidden="true"
     />
   );
-}
+};

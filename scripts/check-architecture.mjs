@@ -5,6 +5,17 @@ import { basename, join, relative, sep } from 'node:path';
 
 const SRC = 'src';
 const MAX_STYLE_LINES = 120;
+// Viewport width breakpoints live in src/styles/breakpoints.scss, modules use screen-from()/screen-below()/screen-between().
+const RAW_WIDTH_MEDIA = /@media[^{]*\bwidth\b/;
+// Spacing goes through the --space-* scale, see docs/ai/code-style.md.
+const RAW_SPACING = /^\s*(padding|margin|gap|row-gap|column-gap)[\w-]*\s*:[^;]*\d(px|rem)/m;
+// Line height goes through the --leading-* scale, see docs/ai/code-style.md.
+const RAW_LINE_HEIGHT = /^\s*line-height\s*:(?!\s*var\(--leading-)/m;
+const TOKENS_PATH = join(SRC, 'styles', 'tokens.scss');
+const TOKENS_SOURCE = readFileSync(TOKENS_PATH, 'utf8');
+const TOKENS = new Set(TOKENS_SOURCE.match(/--[\w-]+(?=\s*:)/g));
+// Sizes live on the 4px grid (D-35). A pill radius means "as round as possible", not a size.
+const OFF_GRID_ALLOWED = new Set(['--radius-pill']);
 const errors = [];
 
 const report = (path, message) => errors.push(`${relative('.', path)}: ${message}`);
@@ -56,6 +67,80 @@ function checkSharedHooks(dir) {
   }
 }
 
+// index.ts is the public face of a folder: re-exports only, no code.
+const RE_EXPORT = /^export (type )?(\{[^}]*\}|\*) from '[^']+';$/;
+
+function checkIndexFile(path) {
+  const lines = readFileSync(path, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && !line.startsWith('//'));
+  if (lines.some((line) => !RE_EXPORT.test(line))) {
+    report(path, "index.ts holds re-exports only: export { Name } from './Name'");
+  }
+}
+
+const toPx = (value, unit) => (unit === 'rem' ? Number(value) * 16 : Number(value));
+
+// Every length token is a multiple of 4px; a numbered scale step N is exactly N × 4px.
+function checkTokenGrid() {
+  for (const [, name, value, unit] of TOKENS_SOURCE.matchAll(/(--[\w-]+):\s*([\d.]+)(px|rem);/g)) {
+    const px = toPx(value, unit);
+    if (px % 4 !== 0 && !OFF_GRID_ALLOWED.has(name)) {
+      report(
+        TOKENS_PATH,
+        `${name} is ${px}px, sizes must be multiples of 4px (docs/ai/code-style.md)`,
+      );
+    }
+    const step = name.match(/^--(space|text|leading)-(\d+)$/);
+    if (step && px !== Number(step[2]) * 4) {
+      report(TOKENS_PATH, `${name} must be ${Number(step[2]) * 4}px (step × 4), found ${px}px`);
+    }
+  }
+}
+
+// Line heights are fixed lengths and inherit as is, so a block that sets font-size sets line-height too.
+function checkFontPairs(path, source) {
+  const stack = [''];
+  for (const char of source.replace(/\/\/[^\n]*/g, '')) {
+    if (char === '{') {
+      stack.push('');
+    } else if (char === '}') {
+      const block = stack.pop();
+      if (/(^|[\s;])font-size\s*:/.test(block) && !/(^|[\s;])line-height\s*:/.test(block)) {
+        report(
+          path,
+          `font-size without line-height in the same block: "${block.trim().slice(0, 50)}…"`,
+        );
+      }
+    } else {
+      stack[stack.length - 1] += char;
+    }
+  }
+}
+
+function checkStyleModule(path) {
+  const source = readFileSync(path, 'utf8');
+  checkFontPairs(path, source);
+  if (RAW_WIDTH_MEDIA.test(source)) {
+    report(
+      path,
+      'width media query must use @include screen-from(name), screen-below(name) or screen-between(from, to), see docs/ai/code-style.md',
+    );
+  }
+  if (RAW_SPACING.test(source)) {
+    report(path, 'padding/margin/gap must use var(--space-*), see docs/ai/code-style.md');
+  }
+  if (RAW_LINE_HEIGHT.test(source)) {
+    report(path, 'line-height must use var(--leading-*), see docs/ai/code-style.md');
+  }
+  for (const [, name] of source.matchAll(/var\((--[\w-]+)/g)) {
+    if (!TOKENS.has(name)) {
+      report(path, `unknown token ${name}, not declared in src/styles/tokens.scss`);
+    }
+  }
+}
+
 function walk(dir) {
   const entries = readdirSync(dir, { withFileTypes: true });
   const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
@@ -64,11 +149,17 @@ function walk(dir) {
   if (isComponent) {
     checkComponentFolder(dir, files);
   }
+  if (files.includes('index.ts')) {
+    checkIndexFile(join(dir, 'index.ts'));
+  }
 
   for (const file of files.filter((name) => name.endsWith('.scss'))) {
     const lines = countLines(join(dir, file));
     if (lines > MAX_STYLE_LINES) {
       report(join(dir, file), `${lines} lines, max ${MAX_STYLE_LINES}`);
+    }
+    if (file.endsWith('.module.scss')) {
+      checkStyleModule(join(dir, file));
     }
   }
 
@@ -78,6 +169,7 @@ function walk(dir) {
 }
 
 walk(SRC);
+checkTokenGrid();
 checkSharedHooks(join(SRC, 'hooks'));
 
 if (errors.length > 0) {

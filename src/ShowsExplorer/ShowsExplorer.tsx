@@ -1,0 +1,17 @@
+import type { FC } from 'react';
+import styles from './ShowsExplorer.module.scss';
+import { useShowsExplorer } from './useShowsExplorer';
+import { Header } from './components/Header';
+import { MainContent } from './components/MainContent';
+
+export const ShowsExplorer: FC = () => {
+  const { isCompact, query, term, onQueryChange } = useShowsExplorer();
+
+  return (
+    <div className={`container ${styles.explorer}`}>
+      <Header query={query} onQueryChange={onQueryChange} isCompact={isCompact} />
+
+      <MainContent term={term} />
+    </div>
+  );
+};

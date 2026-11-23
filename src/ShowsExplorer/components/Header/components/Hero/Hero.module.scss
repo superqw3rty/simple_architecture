@@ -1,0 +1,24 @@
+.hero {
+  text-align: center;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+
+  @include screen-below(tablet) {
+    font-size: var(--text-10);
+    line-height: var(--leading-12);
+  }
+
+  @include screen-from(tablet) {
+    font-size: var(--text-19);
+    line-height: var(--leading-21);
+  }
+}
+
+.heroDescription {
+  color: var(--color-text-muted);
+  font-size: var(--text-5);
+  line-height: var(--leading-8);
+}

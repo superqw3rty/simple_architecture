@@ -1,5 +1,8 @@
 // Design tokens. Source of truth: Figma file "TV Shows Explorer", collection "Tokens".
 // Component styles use only these variables, never raw values.
+// Partials do not get vite's additionalData, so the breakpoint mixins are imported here explicitly.
+@use './breakpoints' as *;
+
 :root {
   color-scheme: dark;
 
@@ -21,42 +24,90 @@
   // Typography
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.625rem;
-  --text-2xl: 2.5rem;
-  --text-3xl: 4.75rem;
+  // Font size: 4px grid, the step number is the value / 4 (--text-4 = 16px), like --space-*.
+  --text-3: 0.75rem; // 12: eyebrow, meta, tags, captions, chip counts
+  --text-4: 1rem; // 16: body, controls (buttons, chips, page buttons), search on mobile
+  --text-5: 1.25rem; // 20: logo, card title, hero description, search from tablet
+  --text-8: 2rem; // 32: results heading and status title on mobile
+  --text-10: 2.5rem; // 40: hero title on mobile, status title from tablet
+  --text-11: 2.75rem; // 44: results heading from tablet
+  --text-18: 4.5rem; // 72: the glyph of a status message (∅)
+  --text-19: 4.75rem; // 76: hero title from tablet
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
+  // Letter spacing of uppercase labels (Eyebrow). Figma: Meta 0.96px at 12px, Hero eyebrow 0.14em.
+  --tracking-wide: 0.08em;
+  --tracking-wider: 0.14em;
 
-  // Spacing
+  // Line height: 4px grid, the step number is the value / 4 (--leading-6 = 24px).
+  // A fixed length is inherited as is, so every rule that sets font-size sets line-height next to it
+  // (checked by pnpm check:arch). Pairs used in the layouts, font → line:
+  --leading-4: 1rem; // 12 → 16
+  --leading-6: 1.5rem; // 16 → 24, logo 20 → 24
+  --leading-7: 1.75rem; // 20 → 28: card title, search from tablet
+  --leading-8: 2rem; // 20 → 32: hero description
+  --leading-10: 2.5rem; // 32 → 40
+  --leading-12: 3rem; // 40 → 48
+  --leading-13: 3.25rem; // 44 → 52
+  --leading-18: 4.5rem; // 72 → 72: status glyph
+  --leading-21: 5.25rem; // 76 → 84
+
+  // Spacing: 4px grid, the step number is the value / 4 (--space-5 = 20px).
+  // Mirrors Figma variables space/* — padding and gap in the layouts use only these.
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-30: 120px;
+
+  // Page gutter: side padding of the page sections (Header, MainContent), the same in both so edges line up.
+  // Figma: layout/page-gutter/mobile | tablet | desktop.
+  @include screen-below(tablet) {
+    --page-gutter: var(--space-4);
+  }
+
+  @include screen-between(tablet, desktop) {
+    --page-gutter: var(--space-8);
+  }
+
+  @include screen-from(desktop) {
+    --page-gutter: var(--space-16);
+  }
 
   // Shape
-  --radius-sm: 10px;
-  --radius-md: 14px;
+  --radius-sm: 8px;
+  --radius-md: 12px; // buttons, page buttons, skeleton blocks
   --radius-lg: 20px;
   --radius-pill: 999px;
-  --control-height-md: 52px;
-  --control-height-lg: 68px;
-  --page-button-size: 44px;
+  // Control heights: a fixed height with the border inside (border-box), so a 1px border does not push it off the grid.
+  --control-height-xs: 36px; // chips
+  --control-height-sm: 44px; // buttons, page buttons
+  --control-height-md: 52px; // search field
+  --full-search-max-width: 720px;
+
+  // Element sizes (not spacing)
+  --page-max-width: 1440px; // content stops growing here, the Figma desktop frame width
+  --status-message-max-width: 440px;
+  --logo-dot-size: 12px;
+  // ShowCard poster, Figma ShowCard Size=Compact | Default, aspect ≈ 42∶59 (D-24), sizes on the 4px grid (D-35)
+  --poster-width-compact: 128px;
+  --poster-height-compact: 180px;
+  --poster-width-default: 168px;
+  --poster-height-default: 236px;
+  --status-symbol-size: 72px;
 
   // Motion
   --duration-fast: 150ms;
-  --duration-base: 300ms;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   // Focus
-  --focus-ring: 0 0 0 3px rgb(242 169 59 / 45%);
+  --focus-ring: 0 0 0 4px rgb(242 169 59 / 45%);
 }

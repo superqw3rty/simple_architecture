@@ -28,6 +28,7 @@ export { Name } from './Name';
 
 `Name.tsx` — только JSX и вызов презентера:
 ```tsx
+import type { FC } from 'react';
 import styles from './Name.module.scss';
 import { useName } from './useName';
 
@@ -35,7 +36,7 @@ export interface NameProps {
   // ...
 }
 
-export function Name(props: NameProps) {
+export const Name: FC<NameProps> = (props) => {
   const { title, isActive, onToggle } = useName(props);
 
   return (
@@ -43,7 +44,7 @@ export function Name(props: NameProps) {
       {/* JSX */}
     </section>
   );
-}
+};
 ```
 
 `useName.ts` — вся логика:
@@ -56,7 +57,7 @@ export function useName({ ... }: NameProps) {
 }
 ```
 
-`Name.module.scss` — только если нужны стили; значения — через CSS-переменные из `src/styles/tokens.scss`.
+`Name.module.scss` — только если нужны стили; значения — через CSS-переменные из `src/styles/tokens.scss`, разное на экранах значение — парой `@include screen-below(tablet)` + `@include screen-from(tablet)` (три значения — через `screen-between(tablet, desktop)`), боковой отступ страницы — `var(--page-gutter)`, высота строки — `var(--leading-*)` (см. `docs/ai/code-style.md`, «Брейкпоинты»).
 
 Исключения:
 - `components/ui/*` — без `useName.ts` вообще.
@@ -65,7 +66,8 @@ export function useName({ ... }: NameProps) {
 ## 3. Проверь себя
 
 - [ ] Имя папки = имя компонента = имя `.tsx`, PascalCase.
-- [ ] В `.tsx` нет хуков React, вычислений, обработчиков с телом, импортов из `@/api` и `@/hooks`.
+- [ ] Компонент объявлен как `export const Name: FC<NameProps>` (D-28).
+- [ ] В `.tsx` нет хуков React, вычислений, обработчиков с телом (в том числе `onClick={() => …}`), импортов из `@/api` и `@/hooks`.
 - [ ] Презентер возвращает данные в готовом для JSX виде (флаги `is*`, обработчики `on*`).
 - [ ] Каждый файл ≤ 120 строк.
 - [ ] Чистые функции и хуки с логикой покрыты тестом `*.test.ts` рядом.

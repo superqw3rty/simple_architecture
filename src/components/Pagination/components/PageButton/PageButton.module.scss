@@ -2,14 +2,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--page-button-size);
-  height: var(--page-button-size);
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
   padding: 0;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background-color: transparent;
   color: var(--color-text);
-  font-size: var(--text-sm);
+  font-size: var(--text-4);
+  line-height: var(--leading-6);
   font-weight: var(--weight-bold);
   cursor: pointer;
   transition:

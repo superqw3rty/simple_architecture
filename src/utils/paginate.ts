@@ -6,7 +6,7 @@ export interface Page<T> {
 }
 
 /** Slices one page out of the list. An out-of-range page is clamped, so callers need no sync effects. */
-export function paginate<T>(items: readonly T[], page: number, pageSize: number): Page<T> {
+export function paginate<T>(items: readonly T[], page: number = 1, pageSize: number = 3): Page<T> {
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const current = Math.min(Math.max(1, Math.trunc(page) || 1), totalPages);
   const start = (current - 1) * pageSize;

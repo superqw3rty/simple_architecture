@@ -1,0 +1,18 @@
+@use '@/styles/breakpoints' as *;
+
+// The row of genre chips, shared by GenreChips and GenreChipsSkeleton.
+// Mobile: one line that scrolls sideways. From tablet: chips wrap onto new lines.
+@mixin chip-row {
+  display: flex;
+  width: 100%;
+  gap: var(--space-2);
+
+  @include screen-below(tablet) {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  @include screen-from(tablet) {
+    flex-wrap: wrap;
+  }
+}

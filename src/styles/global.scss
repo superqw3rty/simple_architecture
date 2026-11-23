@@ -1,3 +1,4 @@
+@use './fonts';
 @use './tokens';
 
 *,
@@ -19,8 +20,8 @@ body {
   background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: var(--text-md);
-  line-height: 1.5;
+  font-size: var(--text-4);
+  line-height: var(--leading-6);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -62,5 +63,23 @@ img {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+#root {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+
+  @include screen-below(tablet) {
+    gap: var(--space-5);
+  }
+
+  @include screen-from(tablet) {
+    gap: var(--space-8);
   }
 }

@@ -3,28 +3,13 @@
 Учебный проект курса **Simple Architecture** (Clean Architecture + VIPER для React).
 Этот файл — точка входа. Он короткий намеренно: детали лежат в `docs/ai/`, читай нужный файл **до** того, как писать код.
 
-## Стек
-
-Vite · React 19 · TypeScript (strict) · SCSS Modules · Vitest · pnpm. Алиас `@/` → `src/`.
-Runtime-зависимости — только `react` и `react-dom`. Новые пакеты — по `docs/ai/dependencies.md`.
-
-## Команды
-
-| Команда | Что делает |
-|---|---|
-| `pnpm dev` | dev-сервер |
-| `pnpm check` | format:check + typecheck + lint + check:arch + test — **обязательна перед завершением задачи** |
-| `pnpm format` | отформатировать код Prettier-ом (`pnpm exec eslint . --fix` — автоисправления линтера) |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm check:arch` | проверки по отдельности |
-| `pnpm build` | production-сборка |
-
 ## Пять правил, которые нельзя нарушать
 
 1. **Компонент = view.** В `*.tsx` только JSX и один вызов своего презентера `useComponentName()`. Никаких `useState`/`useEffect`/вычислений/обработчиков с логикой.
 2. **Вся логика — в презентере** `useComponentName.ts` и в хуках/функциях рядом с ним.
 3. **Файл ≤ 120 строк** кода (TS, TSX, SCSS). Упёрся в лимит — дроби на хуки, функции, дочерние компоненты, а не сжимай код.
 4. **Дерево папок повторяет экран.** Каждый компонент живёт в своей папке; где именно — см. `docs/ai/structure.md`.
-5. **Сеть — только через `@/api`**, запросы из React — только через `useRequest`.
+5. **Сеть — только через `@/api`**, запросы из React — только `useQuery` с фабрикой из `@/api` (`showQueries.search(term)`).
 
 Правила 1, 3, 5 проверяет ESLint, структуру папок — `pnpm check:arch`. Не отключай правила (`eslint-disable`) — меняй код.
 
@@ -35,7 +20,7 @@ Runtime-зависимости — только `react` и `react-dom`. Новы
 | `docs/ai/architecture.md` | пишешь/меняешь компонент или хук: что такое view и presenter, что считается логикой |
 | `docs/ai/structure.md` | создаёшь файл или папку: куда класть, шаблон папки компонента |
 | `docs/ai/code-style.md` | именование, TypeScript, SCSS, как дробить файл при лимите |
-| `docs/ai/data-fetching.md` | любой запрос данных: `useRequest`, кэш, отмена, debounce, статусы |
+| `docs/ai/data-fetching.md` | любой запрос данных: TanStack Query, фабрики запросов, отмена, debounce, статусы |
 | `docs/ai/api-layer.md` | добавляешь эндпоинт или сервис: http-клиент, DTO, мапперы, модели |
 | `docs/ai/dependencies.md` | хочешь добавить/обновить пакет |
 | `docs/ai/decisions.md` | журнал решений и отступлений от лекций — сверяйся при сомнениях |

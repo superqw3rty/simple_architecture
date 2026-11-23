@@ -1,0 +1,51 @@
+// Self-hosted fonts (files live in src/assets/fonts).
+
+// Manrope — body text (cyrillic + latin)
+@font-face {
+  font-display: swap;
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../assets/fonts/manrope-v23-cyrillic_latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  src: url('../assets/fonts/manrope-v23-cyrillic_latin-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  src: url('../assets/fonts/manrope-v23-cyrillic_latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../assets/fonts/manrope-v23-cyrillic_latin-700.woff2') format('woff2');
+}
+
+// Fraunces — display headings (latin)
+@font-face {
+  font-display: swap;
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  src: url('../assets/fonts/fraunces-v38-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 400;
+  src: url('../assets/fonts/fraunces-v38-latin-italic.woff2') format('woff2');
+}

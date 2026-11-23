@@ -1,0 +1,12 @@
+// Same font metrics as the Results title: the skeleton is one line tall (1lh).
+.title {
+  @include screen-below(tablet) {
+    font-size: var(--text-8);
+    line-height: var(--leading-10);
+  }
+
+  @include screen-from(tablet) {
+    font-size: var(--text-11);
+    line-height: var(--leading-13);
+  }
+}

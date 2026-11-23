@@ -2,6 +2,7 @@
 // Each object says "for these files, use these rules"; later objects override earlier ones.
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -53,6 +54,8 @@ export default defineConfig([
     rules: {
       // Files stay short. Blank lines and comments are free.
       'max-lines': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
+      // Debug output does not ship.
+      'no-console': 'error',
       // All network access goes through src/api/http.ts.
       'no-restricted-globals': [
         'error',
@@ -67,15 +70,55 @@ export default defineConfig([
     rules: { 'no-restricted-globals': 'off' },
   },
 
+  // 5a. The API layer knows nothing about React. From TanStack Query it takes only
+  // the framework-free parts: the client and the queryOptions() helper.
+  {
+    files: ['src/api/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'src/api does not depend on React (docs/ai/api-layer.md).' },
+            {
+              name: '@tanstack/react-query',
+              allowImportNames: ['QueryClient', 'queryOptions'],
+              message: 'src/api uses only QueryClient and queryOptions (docs/ai/api-layer.md).',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@/hooks', '@/hooks/*', '@/components', '@/components/*'],
+              message: 'src/api does not depend on UI (docs/ai/api-layer.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // 6. View layer: every .tsx is a view, and a view has no logic.
   {
     files: ['src/**/*.tsx'],
+    plugins: { react },
+    // An explicit version: "detect" reads package.json through APIs that ESLint 10 removed.
+    settings: { react: { version: '19' } },
     rules: {
+      // Every element of a list has a stable key; <></> in a list must become <Fragment key>.
+      'react/jsx-key': ['error', { checkFragmentShorthand: true, warnOnDuplicates: true }],
       // No React hooks, no shared hooks, no API calls: only the component's own presenter.
       'no-restricted-imports': [
         'error',
         {
-          paths: [{ name: 'react', importNames: REACT_HOOKS, message: VIEW_MESSAGE }],
+          paths: [
+            { name: 'react', importNames: REACT_HOOKS, message: VIEW_MESSAGE },
+            // useQuery & co. are hooks: a view gets data from its presenter.
+            {
+              name: '@tanstack/react-query',
+              allowImportNames: ['QueryClientProvider'],
+              message: VIEW_MESSAGE,
+            },
+          ],
           patterns: [
             { group: ['@/api', '@/api/*', '@/hooks', '@/hooks/*'], message: VIEW_MESSAGE },
             {
@@ -91,6 +134,18 @@ export default defineConfig([
         {
           selector: "MemberExpression[object.name='React'][property.name=/^use([A-Z]|$)/]",
           message: VIEW_MESSAGE,
+        },
+        // onClick={() => onSelect(label)} is a handler with a body: the presenter returns a ready one.
+        {
+          selector:
+            'JSXAttribute[name.name=/^on[A-Z]/] > JSXExpressionContainer > :matches(ArrowFunctionExpression, FunctionExpression)',
+          message: VIEW_MESSAGE,
+        },
+        // D-28: one way to declare a component.
+        {
+          selector: 'ExportNamedDeclaration > FunctionDeclaration',
+          message:
+            'Declare a component as export const Name: FC<NameProps> = (props) => … (docs/ai/code-style.md, D-28).',
         },
       ],
     },

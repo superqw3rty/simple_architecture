@@ -13,13 +13,14 @@ View отвечает только за то, **что увидит пользо
 - один вызов своего презентера: `const { ... } = useComponentName(props)`;
 - деструктуризация пропсов;
 - тривиальный рендер-синтаксис: `condition && <X />`, тернарник, `items.map(...)` по уже готовому списку;
+- сборка `className` из классов (шаблонная строка, тернарник по готовому флагу) — D-29;
 - `memo`, `forwardRef`, `Fragment`, `Suspense`, импорт типов из `react`;
 - импорт дочерних компонентов, стилей и типов.
 
 Запрещено:
 - любые хуки React (`useState`, `useEffect`, `useMemo`, `useCallback`, `useRef`…) и хуки из `@/hooks`;
 - импорт из `@/api`;
-- вычисления и преобразования данных: `filter`, `sort`, `reduce`, форматирование дат/чисел, сборка строк, арифметика;
+- вычисления и преобразования данных: `filter`, `sort`, `reduce`, форматирование дат/чисел, сборка строк для отображения (кроме `className`), арифметика;
 - обработчики с телом: `onClick={() => { setA(1); track(); }}`;
 - условия сложнее одного готового булева флага: `a && b.length > 0 && !c` — это логика, презентер должен отдать `isListVisible`.
 
@@ -27,7 +28,7 @@ View отвечает только за то, **что увидит пользо
 
 ```tsx
 // ✅ GenreFilter.tsx
-export function GenreFilter(props: GenreFilterProps) {
+export const GenreFilter: FC<GenreFilterProps> = (props) => {
   const { chips, onReset, isResetActive } = useGenreFilter(props);
 
   return (
@@ -38,17 +39,17 @@ export function GenreFilter(props: GenreFilterProps) {
       ))}
     </ul>
   );
-}
+};
 ```
 
 ```tsx
 // ❌ логика во view
-export function GenreFilter({ shows, selected, onChange }: Props) {
+export const GenreFilter: FC<Props> = ({ shows, selected, onChange }) => {
   const genres = [...new Set(shows.flatMap((s) => s.genres))].sort(); // вычисление
   return genres.map((g) => (
     <Chip key={g} isActive={g === selected} onClick={() => onChange(g === selected ? null : g)} />
   ));
-}
+};
 ```
 
 ## Presenter — `useComponentName.ts`
