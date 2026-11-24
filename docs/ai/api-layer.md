@@ -27,7 +27,7 @@ src/types/
 
 1. **`fetch` только в `http.ts`.** В остальном `src/` он запрещён ESLint-правилом. Заголовки, базовая обработка ошибок, будущая авторизация — всё в одном месте.
 2. **Каждая функция эндпоинта принимает `signal`** последним аргументом и пробрасывает его в `request` — без этого не работает отмена.
-3. **Наружу — только доменные модели.** Типы из `@/types/api` используются только внутри `src/api` и не попадают в хуки и компоненты. Сервер переименовал поле — меняется один маппер.
+3. **Наружу — только доменные модели.** Типы из `@/types/api` используются только внутри `src/api` и не попадают в хуки и компоненты (ESLint, D-52). Сервер переименовал поле — меняется один маппер.
 4. **Маппер терпим к данным**: любое поле может прийти `null` или отсутствовать. Маппер подставляет значения по умолчанию (`genres ?? []`, `image?.medium ?? null`), чистит HTML (`stripHtml`), приводит форматы (год из даты).
 5. **Ошибки — всегда `ApiError`** с понятным пользователю `message` и `status`. `AbortError` пробрасывается как есть — TanStack Query распознаёт отмену сам.
 6. **Из React API вызывается только через фабрику запросов** и `useQuery` в хуке (см. `data-fetching.md`). View и чистые функции API не вызывают.
@@ -54,16 +54,25 @@ export async function searchShows(query: string, signal?: AbortSignal): Promise<
   return results.map((result) => mapShow(result.show));
 }
 
-// src/api/tvmaze/showQueries.ts
+// src/api/tvmaze/showQueries.ts (без JSDoc)
+const SEARCH_STALE_TIME = 5 * 60_000;
+
+type ShowsKey = readonly ['shows'];
+type ShowsSearchesKey = readonly [...ShowsKey, 'search'];
+type ShowsSearchKey = readonly [...ShowsSearchesKey, string];
+type ShowsSearchOptions = ReturnType<typeof queryOptions<Show[], Error, Show[], ShowsSearchKey>>;
+
 export const showQueries = {
-  all: () => ['shows'] as const,
-  searches: () => [...showQueries.all(), 'search'] as const,
-  search: (term: string) =>
+  all: (): ShowsKey => ['shows'] as const,
+
+  searches: (): ShowsSearchesKey => [...showQueries.all(), 'search'] as const,
+
+  search: (term: string): ShowsSearchOptions =>
     queryOptions({
       queryKey: [...showQueries.searches(), term] as const,
       queryFn: ({ signal }) => searchShows(term, signal),
       enabled: term.length > 0,
-      staleTime: 5 * 60_000,
+      staleTime: SEARCH_STALE_TIME,
     }),
 };
 ```
@@ -72,7 +81,7 @@ export const showQueries = {
 
 - Модель описывает то, что нужно приложению, а не всё, что отдаёт сервер. Не нужное сейчас поле не добавляем.
 - Поля модели — в `camelCase`, без `null`-сюрпризов там, где можно дать значение по умолчанию.
-- Модель не содержит UI-строк («No rating») — их готовит презентер.
+- Модель не содержит UI-строк («No rating», «Untitled») — их готовит презентер. Нет значения — `null` или пустая строка (D-53).
 
 ## Тесты
 

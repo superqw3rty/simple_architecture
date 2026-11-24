@@ -10,7 +10,6 @@ interface UseShowsSearchResult {
   isLoading: boolean;
   isSuccess: boolean;
   isError: boolean;
-  error: Error | null;
   refetch: UseQueryResult<Show[]>['refetch'];
 }
 
@@ -23,7 +22,6 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
     isLoading: search.isLoading,
     isSuccess: search.isSuccess,
     isError: search.isError,
-    error: search.error,
     refetch: search.refetch,
   };
 }

@@ -63,7 +63,7 @@ describe('mapShow', () => {
   it('survives a response where the fields are missing altogether', () => {
     const show = mapShow(dto({ name: undefined }));
 
-    expect(show).toMatchObject({ name: 'Untitled', genres: [], imageUrl: null, rating: null });
+    expect(show).toMatchObject({ name: '', genres: [], imageUrl: null, rating: null });
   });
 
   it('drops a status the app does not know', () => {

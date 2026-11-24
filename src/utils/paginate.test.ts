@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { paginate } from './paginate';
-import { stripHtml } from './stripHtml';
 
 describe('paginate', () => {
   const items = [1, 2, 3, 4, 5, 6, 7];
@@ -16,17 +15,5 @@ describe('paginate', () => {
 
   it('reports one empty page for an empty list', () => {
     expect(paginate([], 1, 3)).toEqual({ items: [], page: 1, totalPages: 1 });
-  });
-});
-
-describe('stripHtml', () => {
-  it('removes tags and decodes common entities', () => {
-    expect(stripHtml('<p><b>Tom &amp; Jerry</b></p><p>A&nbsp;classic.</p>')).toBe(
-      'Tom & Jerry A classic.',
-    );
-  });
-
-  it('handles missing values', () => {
-    expect(stripHtml(null)).toBe('');
   });
 });

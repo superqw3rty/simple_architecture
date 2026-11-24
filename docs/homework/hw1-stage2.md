@@ -1,5 +1,7 @@
 # Этап 2 — ShowsExplorer: гайд для самостоятельной реализации
 
+> **Исторический документ.** Гайд написан до реализации; код и правила с тех пор ушли вперёд. Действующие правила — `docs/ai/` (при расхождении прав `docs/ai`), устройство кода — сам `src/ShowsExplorer`. Ниже исправлены только места, которые учили неверному правилу.
+
 Костяк и API готовы. Фичу (хуки, презентеры, вёрстку, расположение компонентов) ты пишешь сам. Здесь собрано всё, что для этого нужно: что уже есть, предлагаемое дерево, контракты, переход поиска, подводные камни и чек-лист.
 
 Требования задания — в [hw1.md](hw1.md). Правила — в [docs/ai](../ai/). Макет — [Figma](https://www.figma.com/design/o9svDdIlDyX4q4rzkUwHMn).
@@ -22,7 +24,7 @@
 
 | Компонент | Пропсы | Откуда |
 |---|---|---|
-| `TextInput` | `label` (обязателен, для скринридеров), `icon?` + нативные\| 'lg'` + нативные пропсы `<input>`: `value`, `onChange`, `placeholder`, `type`… | `@/components/ui/TextInput` |
+| `TextInput` | `label` (обязателен, для скринридеров), `icon?`, `inputRef?` + нативные пропсы `<input>`: `value`, `onChange`, `placeholder`, `type`… | `@/components/ui/TextInput` |
 | `SearchIcon` | — | `@/components/ui/SearchIcon` |
 | `Chip` | `label`, `count?`, `isActive?`, `onClick?` | `@/components/ui/Chip` |
 | `Button` | `variant?: 'primary' \| 'ghost'` + нативные пропсы `<button>` | `@/components/ui/Button` |
@@ -50,24 +52,23 @@ src/ShowsExplorer/
   useGenreFilter.ts              жанры
   collectGenres.ts (+ test)      чистая функция
   constants.ts                   PAGE_SIZE, SEARCH_DEBOUNCE_MS
-  components/
-    SearchHeader/                бренд + hero + поле поиска; здесь живёт переход
-      components/Hero/
-      components/Suggestions/
-    GenreFilter/
-    ShowList/
-      components/ShowCard/
-      components/ShowListSkeleton/
+  SearchHeader/                  бренд + hero + поле поиска; здесь живёт переход
+    Hero/
+    Suggestions/
+  GenreFilter/
+  ShowList/
+    ShowCard/
+    ShowListSkeleton/
 ```
 
 Почему так (дерево решений из [structure.md](../ai/structure.md)):
 - `ShowsExplorer` сам добывает данные → `src/ShowsExplorer/`.
-- Всё остальное используется одним родителем → `Parent/components/Child/`.
+- Всё остальное используется одним родителем → папкой прямо в родителе: `Parent/Child/` (D-42). `components/` — только для общих компонентов поддерева.
 - В `src/components` ничего нового не нужно: переиспользуемое уже там.
 
 Вопросы для самопроверки:
 - У каких компонентов презентер обязателен, а каким он не нужен (D-5)?
-- `ShowCard` — это `ShowList/components` или `ShowsExplorer/components`? Что изменится, если карточка понадобится ещё где-то?
+- `ShowCard` — это `ShowList/ShowCard` или общий компонент? Что изменится, если карточка понадобится ещё где-то?
 - Скелетон списка — отдельный компонент или ветка внутри `ShowList`? Что из этого даёт view без условий?
 
 Новый компонент создавай по skill `new-component` (или вручную по тому же шаблону).
@@ -92,7 +93,7 @@ src/ShowsExplorer/
 ### `useGenreFilter(shows, term)`
 - Один выбранный жанр или `null`.
 - Сброс: чип «All» и повторный клик по активному чипу.
-- Новый поисковый запрос сбрасывает жанр. Сделай это **без `useEffect`**: храни в state пару «жанр + `term`, для которого он выбран»; если `term` другой — жанр считается невыбранным.
+- Новый поисковый запрос сбрасывает жанр. Сделай это **без `useEffect`**. В реализации — `key={term}` у `Results`: новый запрос пересоздаёт поддерево, жанр и страница сбрасываются сами (D-50).
 - Отдаёт готовые чипы (`label`, `count`, `isActive`, `onSelect`) и отфильтрованный список.
 
 ### Пагинация
@@ -100,16 +101,14 @@ src/ShowsExplorer/
 - `paginate(filtered, page, PAGE_SIZE)` — возвращает и элементы, и уже зажатый номер страницы; в `Pagination` передавай именно его.
 - Смена жанра ставит страницу 1. Смена запроса — тоже (или положись на зажатие, но тогда проверь сценарий «страница 3 → новый запрос с 4+ страницами»).
 
-### `useShowsExplorer()`
-Отдаёт view только готовое. View не сравнивает строки статусов и ничего не считает.
+### Презентеры экрана
+Отдают view только готовое. View не сравнивает строки статусов и ничего не считает.
 
-| Группа | Что отдаёт |
+| Презентер | Что отдаёт |
 |---|---|
-| Поиск | `query`, `onQueryChange`, `isCompact` |
-| Состояние | `isLoading`, `isEmpty`, `errorMessage`, `onRetry` |
-| Жанры | `chips` |
-| Список | `visibleShows`, `resultsTitle` |
-| Страницы | `page`, `totalPages`, `onPageChange` |
+| `useShowsExplorer` | `query`, `onQueryChange`, `term`, `isCompact`, `inputRef` |
+| `useMainContent` | `isIdle`, `isLoading`, `hasError`, `isEmpty`, `hasResults`, `announcement`, `onRetry` |
+| `useResults` | `title`, `chips`, `visibleShows`, `page`, `totalPages`, `pageCaption`, `onPageChange` |
 
 ### Состояния экрана
 
@@ -142,7 +141,7 @@ src/ShowsExplorer/
 
 ## 5. Подводные камни
 
-- **Логика во view.** Склейка `className`, `filter`/`sort`/`map` с преобразованием, условия сложнее одного готового флага, обработчики с телом — всё это уходит в презентер ([architecture.md](../ai/architecture.md), D-15). Линтер ловит только хуки и импорты, остальное — на твоей совести и на `arch-review`.
+- **Логика во view.** `filter`/`sort`/`map` с преобразованием, условия сложнее одного готового флага, обработчики с телом — всё это уходит в презентер ([architecture.md](../ai/architecture.md)). Склейка `className` по готовому флагу — можно (D-29). Линтер ловит только хуки и импорты, остальное — на твоей совести и на `arch-review`.
 - **`memo` на `ShowCard`** бесполезен, если презентер каждый рендер отдаёт новые ссылки на объекты и обработчики.
 - **Постер.** `imageUrl` бывает `null` — нужен фолбэк (в макете градиент с первой буквой названия). У `<img>`: осмысленный `alt`, `loading="lazy"`, фиксированные пропорции (`aspect-ratio`), чтобы карточки не прыгали при загрузке.
 - **Описание.** `summary` уже без HTML: `dangerouslySetInnerHTML` не нужен. Обрезка по строкам — `-webkit-line-clamp`.

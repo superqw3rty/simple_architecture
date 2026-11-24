@@ -10,7 +10,7 @@ export interface ShowCardProps {
 }
 
 export const ShowCard: FC<ShowCardProps> = ({ show }) => {
-  const { meta, hasMeta, hasGenres, hasSummary } = useShowCard({ show });
+  const { title, meta, hasMeta, hasGenres, hasSummary } = useShowCard({ show });
 
   return (
     <div className={`container ${styles.card}`}>
@@ -18,7 +18,7 @@ export const ShowCard: FC<ShowCardProps> = ({ show }) => {
         <CardImage show={show} />
         <div className={`container ${styles.info}`}>
           {hasMeta && <Eyebrow eyebrow={meta} size="small" />}
-          <h3 className={styles.title}>{show.name}</h3>
+          <h3 className={styles.title}>{title}</h3>
           {hasGenres && (
             <ul className={styles.tags} role="list">
               {show.genres.map((genre) => (

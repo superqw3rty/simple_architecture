@@ -20,8 +20,7 @@ type ShowsSearchOptions = ReturnType<typeof queryOptions<Show[], Error, Show[], 
  * drops every show query at once.
  *
  * @example
- * const term = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
- * const search = useQuery(showQueries.search(term));
+ * const search = useQuery(showQueries.search(term)); // term: trimmed and debounced
  */
 export const showQueries = {
   all: (): ShowsKey => ['shows'] as const,

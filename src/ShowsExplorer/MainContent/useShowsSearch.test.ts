@@ -40,14 +40,12 @@ describe('useShowsSearch', () => {
     expect(mock.mock.calls[0]?.[0]).toBe('https://api.tvmaze.com/search/shows?q=murder');
   });
 
-  it('exposes the ApiError of a failed search', async () => {
+  it('reports a failed search with no shows', async () => {
     stubFetch(() => new Response(null, { status: 500 }));
 
     const { result } = renderSearch('murder');
 
-    await waitFor(() => expect(result.current.error).not.toBeNull());
-    expect(result.current.isError).toBe(true);
-    expect(result.current.error).toMatchObject({ name: 'ApiError', status: 500 });
+    await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.shows).toEqual([]);
   });
 

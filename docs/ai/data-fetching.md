@@ -9,8 +9,11 @@
 3. **Фичевый хук** рядом с презентером вызывает `useQuery(showQueries.search(term))`. Презентер переводит результат в флаги для view; view про запросы не знает.
 
 ```ts
-// src/ShowsExplorer/useShowsExplorer.ts — debounce до ключа, рядом с решением о раскладке (D-36)
-const term = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
+// src/ShowsExplorer/useShowsExplorer.ts — debounce до ключа, рядом с решением о раскладке (D-36);
+// пустое поле сбрасывает term сразу, без ожидания
+const trimmed = query.trim();
+const debounced = useDebouncedValue(trimmed, trimmed ? SEARCH_DEBOUNCE_MS : 0);
+const term = trimmed ? debounced : '';
 
 // src/ShowsExplorer/MainContent/useShowsSearch.ts
 export function useShowsSearch(term: string): UseShowsSearchResult {
@@ -37,7 +40,7 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
 |---|---|
 | начальное (запрос выключен) | `status === 'pending' && fetchStatus === 'idle'` (или `!enabled`) |
 | первая загрузка → скелетоны | `isLoading` (= `isPending && isFetching`) |
-| ошибка с повтором | `isError`, `error.message`, кнопка → `refetch()` |
+| ошибка с повтором | `isError`, кнопка → `refetch()`; текст — константы экрана, не `error.message` (D-53) |
 | данные / «ничего не найдено» | `isSuccess`, `data.length` |
 | фоновое обновление | `isFetching && isSuccess` — старые данные остаются на экране |
 
@@ -47,7 +50,7 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
 
 **Поведение библиотеки, на которое опирается код, подтверждается тестом.** Утверждение из памяти о том, как ведёт себя TanStack Query, в комментарий не пишется. Сначала — тест или ссылка на документацию.
 
-Презентер переводит это в `isLoading`, `isEmpty`, `errorMessage`, `onRetry` — view не сравнивает строки статусов.
+Презентер переводит это в `isLoading`, `isEmpty`, `hasError`, `onRetry` — view не сравнивает строки статусов.
 
 ## Клиент
 

@@ -64,8 +64,8 @@ export default defineConfig([
           allowHigherOrderFunctions: false,
         },
       ],
-      // Debug output does not ship.
-      'no-console': 'warn',
+      // Debug output does not ship; an error, because pnpm check passes on warnings (D-52).
+      'no-console': 'error',
       // All network access goes through src/api/http.ts.
       'no-restricted-globals': [
         'error',
@@ -100,6 +100,27 @@ export default defineConfig([
             {
               group: ['@/hooks', '@/hooks/*', '@/components', '@/components/*'],
               message: 'src/api does not depend on UI (docs/ai/api-layer.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // 5b. Raw server types stay inside src/api: hooks and presenters work with domain types (D-52).
+  // Views (.tsx) get the same ban in block 6, which owns no-restricted-imports for them.
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['src/api/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/types/api', '@/types/api/*'],
+              message:
+                'Raw API types stay inside src/api. Use domain types (docs/ai/api-layer.md).',
             },
           ],
         },

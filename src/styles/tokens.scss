@@ -100,7 +100,7 @@
   --page-max-width: 1440px; // content stops growing here, the Figma desktop frame width
   --status-message-max-width: 440px;
   --logo-dot-size: 12px;
-  // ShowCard poster, Figma ShowCard Size=Compact | Default, aspect ≈ 42∶59 (D-24), sizes on the 4px grid (D-35)
+  // ShowCard poster, Figma ShowCard Size=Compact | Default, aspect ≈ 42∶59 (D-24); element sizes need not follow the 4px grid (D-46)
   --poster-width-compact: 128px;
   --poster-height-compact: 180px;
   --poster-width-default: 168px;

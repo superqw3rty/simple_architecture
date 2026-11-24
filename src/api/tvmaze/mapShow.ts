@@ -30,7 +30,7 @@ function toStatus(status: string | null | undefined): ShowStatus | null {
 export function mapShow(dto: TvMazeShow): Show {
   return {
     id: dto.id,
-    name: dto.name ?? 'Untitled',
+    name: dto.name ?? '',
     genres: dto.genres ?? [],
     imageUrl: dto.image?.medium ?? null,
     rating: dto.rating?.average ?? null,
