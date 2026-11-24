@@ -174,7 +174,7 @@ export default defineConfig([
 
   // 8. Tooling files run in Node, not in the browser.
   {
-    files: ['*.{js,ts}', 'scripts/**/*.mjs'],
+    files: ['*.{js,ts}', 'scripts/**/*.mjs', '.claude/hooks/**/*.mjs'],
     languageOptions: { globals: globals.node },
   },
 ]);
