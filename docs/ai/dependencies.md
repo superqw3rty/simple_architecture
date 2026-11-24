@@ -36,7 +36,7 @@
 | Пакет | Зачем | Примечание |
 |---|---|---|
 | `vite`, `@vitejs/plugin-react` | сборка и dev-сервер | |
-| `typescript` | типы | закреплён на 6.x: `typescript-eslint` 8 не поддерживает TS 7 |
+| `typescript` | типы | закреплён на 6.0.x (`~6.0.3`): peer `typescript-eslint` 8 — `<6.1.0`. Поднимать вместе с `typescript-eslint` (D-11) |
 | `sass-embedded` | SCSS Modules | |
 | `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `globals` | линт и правила архитектуры | конфиг: `eslint.config.js` |
 | `eslint-plugin-react` | только `react/jsx-key`: `key` у элементов списка (D-32) | peer-зависимость объявлена до ESLint 9.7, на ESLint 10 правило проверено и работает; `settings.react.version` задан явно — автоопределение версии использует API, удалённые в ESLint 10. Если плагин сломается на обновлении ESLint — заменить на `@eslint-react/eslint-plugin` (`no-missing-key`) |
