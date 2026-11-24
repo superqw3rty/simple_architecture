@@ -1,8 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import { showQueries } from './showQueries';
 
-const stubFetch = (response: () => Response) => {
+const stubFetch = (response: () => Response): Mock<typeof fetch> => {
   const mock = vi.fn<typeof fetch>(() => Promise.resolve(response()));
   vi.stubGlobal('fetch', mock);
   return mock;

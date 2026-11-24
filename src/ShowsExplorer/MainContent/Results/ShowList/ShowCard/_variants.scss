@@ -1,0 +1,21 @@
+@use '@/styles/breakpoints' as *;
+
+@mixin card-compact {
+  @include screen-below(tablet) {
+    @content;
+  }
+
+  @include screen-between(desktop, wide) {
+    @content;
+  }
+}
+
+@mixin card-default {
+  @include screen-between(tablet, desktop) {
+    @content;
+  }
+
+  @include screen-from(wide) {
+    @content;
+  }
+}

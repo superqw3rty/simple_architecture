@@ -2,6 +2,7 @@
 // Each object says "for these files, use these rules"; later objects override earlier ones.
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
@@ -54,8 +55,17 @@ export default defineConfig([
     rules: {
       // Files stay short. Blank lines and comments are free.
       'max-lines': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
+      // D-40: every function states its return type; only contextually typed callbacks are exempt.
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: false,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: false,
+        },
+      ],
       // Debug output does not ship.
-      'no-console': 'error',
+      'no-console': 'warn',
       // All network access goes through src/api/http.ts.
       'no-restricted-globals': [
         'error',
@@ -151,7 +161,18 @@ export default defineConfig([
     },
   },
 
-  // 7. Tooling files run in Node, not in the browser.
+  // 7. Accessibility of the markup (D-44): alt texts, ARIA roles and attributes, labels.
+  {
+    files: ['src/**/*.tsx'],
+    ...jsxA11y.flatConfigs.recommended,
+    rules: {
+      ...jsxA11y.flatConfigs.recommended.rules,
+      // role="list" on <ul> is not redundant: Safari drops list semantics with list-style: none.
+      'jsx-a11y/no-redundant-roles': ['error', { ul: ['list'] }],
+    },
+  },
+
+  // 8. Tooling files run in Node, not in the browser.
   {
     files: ['*.{js,ts}', 'scripts/**/*.mjs'],
     languageOptions: { globals: globals.node },

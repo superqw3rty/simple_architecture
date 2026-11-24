@@ -3,7 +3,6 @@ import styles from './Eyebrow.module.scss';
 
 interface EyebrowProps {
   eyebrow: string;
-  /** small — meta line inside a card, medium — section/hero label. */
   size?: 'small' | 'medium';
 }
 

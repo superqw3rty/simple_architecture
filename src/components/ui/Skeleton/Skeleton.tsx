@@ -2,13 +2,11 @@ import type { FC } from 'react';
 import styles from './Skeleton.module.scss';
 
 export interface SkeletonProps {
-  /** Any CSS size: 120, '60%', '2rem'. Default: the full width of the parent. */
   width?: number | string;
   height?: number | string;
   shape?: 'block' | 'text' | 'pill';
 }
 
-/** A shimmering placeholder shown while the real content is loading. */
 export const Skeleton: FC<SkeletonProps> = ({ width = '100%', height = 16, shape = 'block' }) => {
   return (
     <span

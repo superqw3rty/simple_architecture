@@ -6,11 +6,15 @@ import { useShowsExplorer } from './useShowsExplorer';
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
-function type(result: { current: ReturnType<typeof useShowsExplorer> }, query: string) {
+function type(result: { current: ReturnType<typeof useShowsExplorer> }, query: string): void {
   act(() => result.current.onQueryChange(query));
 }
 
-const pause = (ms = SEARCH_DEBOUNCE_MS) => act(() => vi.advanceTimersByTime(ms));
+const pause = (ms = SEARCH_DEBOUNCE_MS): void => {
+  act(() => {
+    vi.advanceTimersByTime(ms);
+  });
+};
 
 describe('useShowsExplorer', () => {
   it('starts on the full start screen', () => {

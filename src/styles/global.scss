@@ -51,8 +51,10 @@ img {
   max-width: 100%;
 }
 
+// Forced-colors mode drops box-shadow but paints the transparent outline.
 :focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   box-shadow: var(--focus-ring);
 }
 

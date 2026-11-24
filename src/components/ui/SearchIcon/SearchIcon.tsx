@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-/** Decorative magnifier icon. Takes the text color of its parent. */
+
 export const SearchIcon: FC = () => {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">

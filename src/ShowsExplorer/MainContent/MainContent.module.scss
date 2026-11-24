@@ -1,0 +1,36 @@
+.mainContent {
+  flex: 1;
+  padding-inline: var(--page-gutter);
+
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  @include screen-below(tablet) {
+    padding-bottom: var(--space-8);
+  }
+
+  @include screen-from(tablet) {
+    padding-bottom: var(--space-16);
+  }
+}
+
+.status {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+
+  @include screen-below(tablet) {
+    padding-bottom: var(--space-12);
+  }
+
+  @include screen-from(tablet) {
+    padding-bottom: var(--space-4);
+  }
+}
+
+.announcer {
+  @include visually-hidden;
+}

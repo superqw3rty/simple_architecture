@@ -8,8 +8,8 @@ export interface ChipProps {
   onClick?: () => void;
 }
 
-/** A clickable tag that can be toggled on and off. */
-export const Chip: FC<ChipProps> = ({ label, count, isActive = false, onClick }) => {
+// No isActive — a plain button, not a toggle: aria-pressed is left out.
+export const Chip: FC<ChipProps> = ({ label, count, isActive, onClick }) => {
   return (
     <button type="button" className={styles.chip} aria-pressed={isActive} onClick={onClick}>
       {label}

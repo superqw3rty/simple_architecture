@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { useStatusMessage } from './useStatusMessage';
 
-const noop = () => {};
+const noop = (): void => {};
 
 describe('useStatusMessage', () => {
   it('shows only the parts that are set', () => {

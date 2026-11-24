@@ -7,7 +7,6 @@ const ENTITIES: Record<string, string> = {
   '&nbsp;': ' ',
 };
 
-/** Turns an HTML fragment from an API into plain text. Never render API HTML directly. */
 export function stripHtml(html: string | null | undefined): string {
   if (!html) {
     return '';

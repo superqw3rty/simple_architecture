@@ -12,8 +12,8 @@
 // src/ShowsExplorer/useShowsExplorer.ts — debounce до ключа, рядом с решением о раскладке (D-36)
 const term = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
 
-// src/ShowsExplorer/components/MainContent/useShowsSearch.ts
-export function useShowsSearch(term: string) {
+// src/ShowsExplorer/MainContent/useShowsSearch.ts
+export function useShowsSearch(term: string): UseShowsSearchResult {
   const search = useQuery(showQueries.search(term));
 
   return { shows: search.data ?? NO_SHOWS, isLoading: search.isLoading /* … */ };

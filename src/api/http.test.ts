@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import { ApiError } from './ApiError';
 import { request } from './http';
 
-const stubFetch = (impl: () => Promise<unknown>) => {
+const stubFetch = (impl: () => Promise<unknown>): Mock<() => Promise<unknown>> => {
   const mock = vi.fn(impl);
   vi.stubGlobal('fetch', mock);
   return mock;

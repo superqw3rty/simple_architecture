@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import { searchShows } from './searchShows';
 
-const stubFetch = (response: () => Response) => {
+const stubFetch = (response: () => Response): Mock<() => Promise<Response>> => {
   const mock = vi.fn(() => Promise.resolve(response()));
   vi.stubGlobal('fetch', mock);
   return mock;
