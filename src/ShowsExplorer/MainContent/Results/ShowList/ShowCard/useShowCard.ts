@@ -1,7 +1,10 @@
 import type { ShowCardProps } from './ShowCard';
 import { formatShowMeta } from './utils/formatShowMeta';
 
+const UNTITLED = 'Untitled';
+
 interface UseShowCardResult {
+  title: string;
   meta: string;
   hasMeta: boolean;
   hasGenres: boolean;
@@ -12,6 +15,7 @@ export function useShowCard({ show }: ShowCardProps): UseShowCardResult {
   const meta = formatShowMeta(show);
 
   return {
+    title: show.name || UNTITLED,
     meta,
     hasMeta: meta.length > 0,
     hasGenres: show.genres.length > 0,

@@ -29,4 +29,11 @@ describe('useShowCard', () => {
 
     expect(result.current).toMatchObject({ hasGenres: false, hasSummary: false });
   });
+
+  it('titles a show without a name as Untitled', () => {
+    expect(renderHook(() => useShowCard({ show })).result.current.title).toBe('Murder');
+    expect(
+      renderHook(() => useShowCard({ show: { ...show, name: '' } })).result.current.title,
+    ).toBe('Untitled');
+  });
 });
