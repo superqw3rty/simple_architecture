@@ -14,11 +14,14 @@ View отвечает только за то, **что увидит пользо
 - деструктуризация пропсов;
 - тривиальный рендер-синтаксис: `condition && <X />`, тернарник, `items.map(...)` по уже готовому списку;
 - сборка `className` из классов (шаблонная строка, тернарник по готовому флагу) — D-29;
+- `ref={…}` из презентера и `key` по значению для сброса состояния дочернего компонента: `<Results key={term} />` (D-50);
 - `memo`, `forwardRef`, `Fragment`, `Suspense`, импорт типов из `react`;
-- импорт дочерних компонентов, стилей и типов.
+- импорт дочерних компонентов, стилей и типов;
+- статичный текст интерфейса прямо в JSX.
 
 Запрещено:
 - любые хуки React (`useState`, `useEffect`, `useMemo`, `useCallback`, `useRef`…) и хуки из `@/hooks`;
+- вызов чужого презентера или второго хука;
 - импорт из `@/api`;
 - вычисления и преобразования данных: `filter`, `sort`, `reduce`, форматирование дат/чисел, сборка строк для отображения (кроме `className`), арифметика;
 - обработчики с телом: `onClick={() => { setA(1); track(); }}`;
@@ -27,24 +30,25 @@ View отвечает только за то, **что увидит пользо
 Проверка: если из `.tsx` убрать JSX и останется что-то кроме импортов и вызова презентера — это логика, её место в презентере.
 
 ```tsx
-// ✅ GenreFilter.tsx
-export const GenreFilter: FC<GenreFilterProps> = (props) => {
-  const { chips, onReset, isResetActive } = useGenreFilter(props);
+// ✅ src/ShowsExplorer/MainContent/Results/Results.tsx (сокращено)
+export const Results: FC<ResultsProps> = (props) => {
+  const { title, headingRef, hasGenres, chips, visibleShows, page, totalPages, pageCaption, onPageChange } =
+    useResults(props);
 
   return (
-    <ul className={styles.list}>
-      <li><Chip label="All" isActive={isResetActive} onClick={onReset} /></li>
-      {chips.map((chip) => (
-        <li key={chip.id}><Chip label={chip.label} isActive={chip.isActive} onClick={chip.onSelect} /></li>
-      ))}
-    </ul>
+    <>
+      <h2 ref={headingRef} tabIndex={-1} className={styles.title} aria-live="polite">{title}</h2>
+      {hasGenres && <GenreChips chips={chips} />}
+      <ShowList shows={visibleShows} />
+      <Pagination page={page} totalPages={totalPages} caption={pageCaption} onChange={onPageChange} />
+    </>
   );
 };
 ```
 
 ```tsx
 // ❌ логика во view
-export const GenreFilter: FC<Props> = ({ shows, selected, onChange }) => {
+export const GenreChips: FC<Props> = ({ shows, selected, onChange }) => {
   const genres = [...new Set(shows.flatMap((s) => s.genres))].sort(); // вычисление
   return genres.map((g) => (
     <Chip key={g} isActive={g === selected} onClick={() => onChange(g === selected ? null : g)} />
@@ -56,19 +60,27 @@ export const GenreFilter: FC<Props> = ({ shows, selected, onChange }) => {
 
 Презентер забирает **100% логики** компонента: достаёт данные и готовит их для отображения.
 
-- Принимает пропсы компонента, возвращает плоский объект «всё, что нужно JSX»: готовые значения, флаги `is*`/`has*`, обработчики `on*`.
-- Отдаёт данные **в форме, удобной view**: не `shows` + `page`, а `visibleShows`; не `status`, а `isLoading`, `isEmpty`, `errorMessage`.
-- Не возвращает JSX и не импортирует компоненты и стили.
-- Не делает всё сам: презентер — это «оглавление». Куски логики выносятся в отдельные хуки (`useShowsSearch.ts`) и чистые функции (`collectGenres.ts`) рядом. Презентер их только соединяет.
+- Принимает пропсы компонента, возвращает плоский объект «всё, что нужно JSX»: готовые значения, флаги `is*`/`has*`, обработчики `on*`, `ref` для управления фокусом.
+- Отдаёт данные **в форме, удобной view**: не `shows` + `page`, а `visibleShows`; не `status`, а `isLoading`, `isEmpty`, `hasError`.
+- Не возвращает JSX и не импортирует компоненты и стили. Типы пропсов своего и дочерних компонентов импортирует через `import type` (D-50).
+- Не делает всё сам: презентер — это «оглавление». Куски логики выносятся в отдельные хуки (`useGenreFilter.ts`) и чистые функции (`utils/formatPageRange.ts`) рядом. Презентер их только соединяет.
 
 ```ts
-// ✅ useShowsExplorer.ts — читается как оглавление
-export function useShowsExplorer(): UseShowsExplorerResult {
-  const search = useShowsSearch();
-  const genres = useGenreFilter(search.shows);
-  const paging = usePagedItems(genres.filteredShows, PAGE_SIZE);
-
-  return { ...search.view, ...genres.view, ...paging.view };
+// ✅ src/ShowsExplorer/MainContent/Results/useResults.ts — читается как оглавление
+export function useResults({ term, shows }: ResultsProps): UseResultsResult {
+  const [page, setPage] = useState(1);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const genres = useGenreFilter(shows, () => setPage(1));
+  const total = genres.filteredShows.length;
+  const paged = paginate(genres.filteredShows, page, PAGE_SIZE);
+  // …onPageChange
+  return {
+    title: formatResultsTitle(total, term),
+    hasGenres: genres.chips.length > 0,
+    visibleShows: paged.items,
+    pageCaption: formatPageRange(paged.page, PAGE_SIZE, total),
+    // …
+  };
 }
 ```
 
@@ -95,5 +107,5 @@ View (.tsx) ──▶ Presenter (useX.ts) ──▶ хуки / чистые фу
 
 - `memo(Component)` во view разрешён — это оптимизация рендера, а не логика.
 - Кастомный компаратор для `memo` — логика: выносится в `.ts` рядом.
-- `useMemo`/`useCallback` — только в презентере и хуках. Чтобы `memo` у дочернего работал, презентер родителя отдаёт стабильные ссылки.
-- Не оптимизируй заранее: `memo` ставится на элементы списков и на тяжёлые компоненты при реальной проблеме.
+- `useMemo`/`useCallback` — только в презентере и хуках, и там разрешены всегда, без доказанной проблемы (D-49). Стабильные ссылки нужны, чтобы `memo` у дочернего работал.
+- Не оптимизируй заранее **компоненты**: `memo` ставится на элементы списков и на тяжёлые компоненты при реальной проблеме.
