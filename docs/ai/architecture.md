@@ -63,7 +63,7 @@ export const GenreFilter: FC<Props> = ({ shows, selected, onChange }) => {
 
 ```ts
 // ✅ useShowsExplorer.ts — читается как оглавление
-export function useShowsExplorer() {
+export function useShowsExplorer(): UseShowsExplorerResult {
   const search = useShowsSearch();
   const genres = useGenreFilter(search.shows);
   const paging = usePagedItems(genres.filteredShows, PAGE_SIZE);

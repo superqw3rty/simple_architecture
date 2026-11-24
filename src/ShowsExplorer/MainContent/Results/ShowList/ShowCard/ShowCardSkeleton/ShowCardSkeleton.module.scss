@@ -1,0 +1,30 @@
+@use '../shell' as *;
+
+// Frame and poster come from ShowCard/_shell.scss, so the layout does not jump when the data arrives.
+.card {
+  @include card-shell;
+}
+
+.infoBlock {
+  @include card-header;
+}
+
+.poster {
+  @include poster-size;
+}
+
+.info {
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.tags {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

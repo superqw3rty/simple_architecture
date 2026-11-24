@@ -14,5 +14,18 @@
       "PowerShell(pnpm test)",
       "PowerShell(pnpm build)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/diff-size.mjs\""
+          }
+        ]
+      }
+    ]
   }
 }

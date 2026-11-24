@@ -1,12 +1,11 @@
 import type { FC } from 'react';
-import { PageButton } from './components/PageButton';
+import { PageButton } from './PageButton';
 import styles from './Pagination.module.scss';
 import { usePagination } from './usePagination';
 
 export interface PaginationProps {
   page: number;
   totalPages: number;
-  /** A line under the buttons, e.g. "Showing 1–3 of 10". Hidden together with the buttons. */
   caption?: string;
   onChange: (page: number) => void;
 }

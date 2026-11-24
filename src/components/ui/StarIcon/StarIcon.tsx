@@ -1,6 +1,5 @@
 import type { FC } from 'react';
 
-/** Decorative star, e.g. next to a rating. Takes the text color of its parent. */
 export const StarIcon: FC = () => (
   <svg width="12" height="12" viewBox="0 -0.5 12 12" fill="none" aria-hidden="true">
     <path

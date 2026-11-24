@@ -1,12 +1,17 @@
 import type { StatusMessageProps } from './StatusMessage';
 
-/** Which optional parts of the message are shown. An empty string counts as "not set". */
+interface UseStatusMessageResult {
+  hasSymbol: boolean;
+  hasDescription: boolean;
+  hasAction: boolean;
+}
+
 export function useStatusMessage({
   symbol,
   description,
   actionLabel,
   onAction,
-}: StatusMessageProps) {
+}: StatusMessageProps): UseStatusMessageResult {
   return {
     hasSymbol: Boolean(symbol),
     hasDescription: Boolean(description),

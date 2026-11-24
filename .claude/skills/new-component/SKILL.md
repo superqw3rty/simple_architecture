@@ -11,7 +11,7 @@ description: Создать новый React-компонент по прави�
 
 Прочитай `docs/ai/structure.md`, раздел «Куда положить компонент», и выбери папку:
 
-- нужен одному родителю → `Parent/components/Name/`
+- нужен одному родителю → `Parent/Name/` (прямо в папке родителя, D-42)
 - нужен нескольким компонентам одной ветки → `components/` ближайшего общего предка
 - нужен в разных ветках → `src/components/Name/`
 - «глупый» кирпичик без логики и домена → `src/components/ui/Name/`
@@ -51,7 +51,13 @@ export const Name: FC<NameProps> = (props) => {
 ```ts
 import type { NameProps } from './Name';
 
-export function useName({ ... }: NameProps) {
+interface UseNameResult {
+  title: string;
+  isActive: boolean;
+  onToggle: () => void;
+}
+
+export function useName({ ... }: NameProps): UseNameResult {
   // состояние, производные данные, обработчики
   return { title, isActive, onToggle };
 }
@@ -70,6 +76,7 @@ export function useName({ ... }: NameProps) {
 - [ ] В `.tsx` нет хуков React, вычислений, обработчиков с телом (в том числе `onClick={() => …}`), импортов из `@/api` и `@/hooks`.
 - [ ] Презентер возвращает данные в готовом для JSX виде (флаги `is*`, обработчики `on*`).
 - [ ] Каждый файл ≤ 120 строк.
+- [ ] Чистые функции лежат в `utils/` папки компонента (D-38).
 - [ ] Чистые функции и хуки с логикой покрыты тестом `*.test.ts` рядом.
-- [ ] Родитель импортирует компонент через папку: `./components/Name`.
+- [ ] Родитель импортирует компонент через папку: `./Name`.
 - [ ] `pnpm check` зелёный.

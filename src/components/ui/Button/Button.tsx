@@ -2,7 +2,6 @@ import type { FC, ButtonHTMLAttributes } from 'react';
 import styles from './Button.module.scss';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
-  /** primary — the main action on the screen, ghost — a secondary one. */
   variant?: 'primary' | 'ghost';
 }
 

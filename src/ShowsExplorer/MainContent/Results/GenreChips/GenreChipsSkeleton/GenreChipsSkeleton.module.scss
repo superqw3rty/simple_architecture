@@ -1,0 +1,5 @@
+@use '../chip-row' as *;
+
+.genreChips {
+  @include chip-row;
+}

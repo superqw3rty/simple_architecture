@@ -1,0 +1,23 @@
+@use '@/styles/breakpoints' as *;
+
+// The results grid, shared by ShowList and ShowListSkeleton.
+// Which ShowCard variant fills the columns is decided in ShowCard/_variants.scss.
+@mixin show-grid {
+  display: grid;
+
+  @include screen-below(desktop) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @include screen-from(desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include screen-below(tablet) {
+    gap: var(--space-5);
+  }
+
+  @include screen-from(tablet) {
+    gap: var(--space-6);
+  }
+}

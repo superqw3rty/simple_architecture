@@ -40,6 +40,7 @@
 | `sass-embedded` | SCSS Modules | |
 | `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `globals` | линт и правила архитектуры | конфиг: `eslint.config.js` |
 | `eslint-plugin-react` | только `react/jsx-key`: `key` у элементов списка (D-32) | peer-зависимость объявлена до ESLint 9.7, на ESLint 10 правило проверено и работает; `settings.react.version` задан явно — автоопределение версии использует API, удалённые в ESLint 10. Если плагин сломается на обновлении ESLint — заменить на `@eslint-react/eslint-plugin` (`no-missing-key`) |
+| `eslint-plugin-jsx-a11y` | доступность разметки: `alt`, ARIA-роли и атрибуты, подписи (D-44) | MIT. peer-зависимость объявлена до ESLint 9; на ESLint 10 проверено пробным файлом (`alt-text`, `aria-role`, `no-redundant-roles` срабатывают). Альтернатива — axe в тестах, но view не тестируем |
 | `prettier` | форматирование | конфиг: `.prettierrc.json`; `eslint-config-prettier` не нужен — стилевых правил ESLint, кроме `curly`, нет |
 | `vitest`, `jsdom` | тесты | |
 | `@testing-library/react` | `renderHook` для тестов хуков | view не тестируем |

@@ -1,7 +1,7 @@
 // Structural checks of Simple Architecture that ESLint cannot express.
 // Rules: docs/ai/structure.md. Run: pnpm check:arch
 import { readdirSync, readFileSync } from 'node:fs';
-import { basename, join, relative, sep } from 'node:path';
+import { basename, dirname, join, relative, sep } from 'node:path';
 
 const SRC = 'src';
 const MAX_STYLE_LINES = 120;
@@ -16,6 +16,8 @@ const TOKENS_SOURCE = readFileSync(TOKENS_PATH, 'utf8');
 const TOKENS = new Set(TOKENS_SOURCE.match(/--[\w-]+(?=\s*:)/g));
 // Sizes live on the 4px grid (D-35). A pill radius means "as round as possible", not a size.
 const OFF_GRID_ALLOWED = new Set(['--radius-pill']);
+// Element sizes (poster, logo dot, max widths) may be off the grid (D-46); control heights may not.
+const ELEMENT_SIZE_TOKEN = /^--(?!control-height-)[\w-]+-(size|width|height)(-\w+)?$/;
 const errors = [];
 
 const report = (path, message) => errors.push(`${relative('.', path)}: ${message}`);
@@ -24,6 +26,9 @@ const countLines = (file) =>
   readFileSync(file, 'utf8')
     .split('\n')
     .filter((line) => line.trim() !== '').length;
+
+// The only .ts files allowed next to a view: public face, constants, types, hooks and their tests.
+const ROOT_TS_ALLOWED = /^(index|constants|types|use[A-Z]\w*(\.test)?)\.ts$/;
 
 function checkComponentFolder(dir, files) {
   const name = basename(dir);
@@ -40,6 +45,11 @@ function checkComponentFolder(dir, files) {
   }
   if (!/^[A-Z][A-Za-z0-9]*$/.test(name)) {
     report(dir, 'component folder must be PascalCase');
+  }
+
+  // Pure helpers of a component live in its utils/ folder (D-38).
+  for (const file of files.filter((item) => item.endsWith('.ts') && !ROOT_TS_ALLOWED.test(item))) {
+    report(join(dir, file), `pure functions of a component live in utils/: utils/${file}`);
   }
 
   const isUi = dir.split(sep).includes('ui');
@@ -82,11 +92,11 @@ function checkIndexFile(path) {
 
 const toPx = (value, unit) => (unit === 'rem' ? Number(value) * 16 : Number(value));
 
-// Every length token is a multiple of 4px; a numbered scale step N is exactly N × 4px.
+// Every length token except element sizes is a multiple of 4px; a numbered scale step N is exactly N × 4px.
 function checkTokenGrid() {
   for (const [, name, value, unit] of TOKENS_SOURCE.matchAll(/(--[\w-]+):\s*([\d.]+)(px|rem);/g)) {
     const px = toPx(value, unit);
-    if (px % 4 !== 0 && !OFF_GRID_ALLOWED.has(name)) {
+    if (px % 4 !== 0 && !OFF_GRID_ALLOWED.has(name) && !ELEMENT_SIZE_TOKEN.test(name)) {
       report(
         TOKENS_PATH,
         `${name} is ${px}px, sizes must be multiples of 4px (docs/ai/code-style.md)`,
@@ -141,6 +151,17 @@ function checkStyleModule(path) {
   }
 }
 
+const JSDOC_ALLOWED = [join(SRC, 'api'), join(SRC, 'types', 'api')];
+
+function checkJsDoc(path) {
+  if (JSDOC_ALLOWED.some((dir) => path.startsWith(dir))) {
+    return;
+  }
+  if (readFileSync(path, 'utf8').includes('/**')) {
+    report(path, 'JSDoc only in src/api and src/types/api, see docs/ai/code-style.md (D-39)');
+  }
+}
+
 function walk(dir) {
   const entries = readdirSync(dir, { withFileTypes: true });
   const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
@@ -151,6 +172,10 @@ function walk(dir) {
   }
   if (files.includes('index.ts')) {
     checkIndexFile(join(dir, 'index.ts'));
+  }
+
+  for (const file of files.filter((name) => /\.tsx?$/.test(name))) {
+    checkJsDoc(join(dir, file));
   }
 
   for (const file of files.filter((name) => name.endsWith('.scss'))) {
@@ -168,7 +193,54 @@ function walk(dir) {
   }
 }
 
+// A nested components/ folder holds only what is shared inside its subtree (D-41).
+// A component with a single importing folder lives directly in that folder instead.
+const SHARED_ROOT = join(SRC, 'components');
+const IMPORT_SPEC = /(?:from|import)\s+'([^']+)'/g;
+
+function listSourceFiles(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return listSourceFiles(path);
+    }
+    return /\.tsx?$/.test(entry.name) ? [path] : [];
+  });
+}
+
+function checkSharedFolders() {
+  const files = listSourceFiles(SRC);
+  const importers = new Map();
+  for (const file of files) {
+    for (const [, spec] of readFileSync(file, 'utf8').matchAll(IMPORT_SPEC)) {
+      const target = spec.startsWith('@/')
+        ? join(SRC, spec.slice(2))
+        : spec.startsWith('.')
+          ? join(dirname(file), spec)
+          : null;
+      if (target && !dirname(file).startsWith(target)) {
+        importers.set(target, (importers.get(target) ?? new Set()).add(dirname(file)));
+      }
+    }
+  }
+  const sharedFolders = files
+    .map((file) => dirname(dirname(file)))
+    .filter((dir, index, all) => basename(dir) === 'components' && all.indexOf(dir) === index);
+  for (const shared of sharedFolders.filter((dir) => !dir.startsWith(SHARED_ROOT))) {
+    for (const entry of readdirSync(shared, { withFileTypes: true })) {
+      const path = join(shared, entry.name);
+      if (entry.isDirectory() && (importers.get(path)?.size ?? 0) < 2) {
+        report(
+          path,
+          'used by one folder: move it into that folder, components/ is for shared ones (D-41)',
+        );
+      }
+    }
+  }
+}
+
 walk(SRC);
+checkSharedFolders();
 checkTokenGrid();
 checkSharedHooks(join(SRC, 'hooks'));
 
