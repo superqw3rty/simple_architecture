@@ -2,7 +2,7 @@ import { act, renderHook, type RenderHookResult } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Show } from '@/types/show';
 import { formatPageRange } from './utils/formatPageRange';
-import { formatResultsTitle } from '../utils/formatResultsTitle';
+import { formatResultsTitle } from '@/ShowsExplorer/MainContent/logic/utils/formatResultsTitle';
 import { useResults } from './useResults';
 
 const show = (id: number, genre: string): Show => ({

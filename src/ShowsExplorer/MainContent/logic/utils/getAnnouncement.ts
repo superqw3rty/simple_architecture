@@ -1,4 +1,4 @@
-import { ERROR_DESCRIPTION, ERROR_TITLE } from '../constants';
+import { ERROR_DESCRIPTION, ERROR_TITLE } from '@/ShowsExplorer/MainContent/constants';
 import { formatResultsTitle } from './formatResultsTitle';
 import { formatEmptyTitle } from './formatEmptyTitle';
 

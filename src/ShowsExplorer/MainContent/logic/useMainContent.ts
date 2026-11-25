@@ -2,7 +2,7 @@ import { useRef, type RefObject } from 'react';
 import type { Show } from '@/types/show';
 import { getAnnouncement } from './utils/getAnnouncement';
 import { formatEmptyTitle } from './utils/formatEmptyTitle';
-import { useShowsSearch } from './useShowsSearch';
+import { useShowsSearch } from './hooks/useShowsSearch';
 
 interface UseMainContentResult {
   mainRef: RefObject<HTMLElement | null>;

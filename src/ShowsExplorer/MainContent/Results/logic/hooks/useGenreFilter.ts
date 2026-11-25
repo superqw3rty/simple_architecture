@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { ChipProps } from '@/components/ui/Chip';
 import type { Show } from '@/types/show';
-import { filterByGenre } from './utils/filterByGenre';
-import { getGenreChips } from './utils/getGenreChips';
+import { filterByGenre } from '../utils/filterByGenre';
+import { getGenreChips } from '../utils/getGenreChips';
 
 interface UseGenreFilterResult {
   chips: ChipProps[];

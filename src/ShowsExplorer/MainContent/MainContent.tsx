@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { StatusMessage } from '@/components/StatusMessage';
 import styles from './MainContent.module.scss';
-import { useMainContent } from './useMainContent';
+import { useMainContent } from './logic/useMainContent';
 import { ErrorComponent } from './ErrorComponent';
 import { Results, ResultsSkeleton } from './Results';
 
