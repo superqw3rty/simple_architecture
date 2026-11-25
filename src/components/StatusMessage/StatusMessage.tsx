@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Button, type ButtonProps } from '@/components/ui/Button';
 import styles from './StatusMessage.module.scss';
-import { useStatusMessage } from './useStatusMessage';
+import { useStatusMessage } from './logic/useStatusMessage';
 
 export interface StatusMessageProps {
   symbol?: string;
