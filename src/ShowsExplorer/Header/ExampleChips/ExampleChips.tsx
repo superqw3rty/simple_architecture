@@ -1,7 +1,7 @@
 import type { FC, RefObject } from 'react';
 import { Chip } from '@/components/ui/Chip';
 import styles from './ExampleChips.module.scss';
-import { useExampleChips } from './useExampleChips';
+import { useExampleChips } from './logic/useExampleChips';
 
 export interface ExampleChipsProps {
   onSelect: (query: string) => void;

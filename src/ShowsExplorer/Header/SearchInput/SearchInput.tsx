@@ -2,7 +2,7 @@ import type { FC, RefObject } from 'react';
 import { SearchIcon } from '@/components/ui/SearchIcon';
 import { TextInput } from '@/components/ui/TextInput';
 import styles from './SearchInput.module.scss';
-import { useSearchInput } from './useSearchInput';
+import { useSearchInput } from './logic/useSearchInput';
 
 interface SearchInputProps {
   value: string;

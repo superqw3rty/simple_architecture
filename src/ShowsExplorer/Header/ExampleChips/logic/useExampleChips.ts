@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import type { ChipProps } from '@/components/ui/Chip';
-import type { ExampleChipsProps } from './ExampleChips';
+import type { ExampleChipsProps } from '../ExampleChips';
 
 const EXAMPLES = ['Murder', 'Batman', 'The Office'];
 
