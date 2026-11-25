@@ -1,6 +1,6 @@
 import { useRef, useState, type RefObject } from 'react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { SEARCH_DEBOUNCE_MS } from './constants';
+import { SEARCH_DEBOUNCE_MS } from '../constants';
 
 interface UseShowsExplorerResult {
   isCompact: boolean;

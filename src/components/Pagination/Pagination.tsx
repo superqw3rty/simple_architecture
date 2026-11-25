@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { PageButton } from './PageButton';
 import styles from './Pagination.module.scss';
-import { usePagination } from './usePagination';
+import { usePagination } from './logic/usePagination';
 
 export interface PaginationProps {
   page: number;

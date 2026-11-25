@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import type { Show } from '@/types/show';
 import { Pagination } from '@/components/Pagination';
 import styles from './Results.module.scss';
-import { useResults } from './useResults';
+import { useResults } from './logic/useResults';
 import { GenreChips } from './GenreChips';
 import { ShowList } from './ShowList';
 

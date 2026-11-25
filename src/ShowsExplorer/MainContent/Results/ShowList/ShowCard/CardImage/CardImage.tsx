@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import type { Show } from '@/types/show';
 import { StarIcon } from '@/components/ui/StarIcon';
 import styles from './CardImage.module.scss';
-import { useCardImage } from './useCardImage';
+import { useCardImage } from './logic/useCardImage';
 
 export interface CardImageProps {
   show: Show;

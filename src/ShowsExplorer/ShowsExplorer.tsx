@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import styles from './ShowsExplorer.module.scss';
-import { useShowsExplorer } from './useShowsExplorer';
+import { useShowsExplorer } from './logic/useShowsExplorer';
 import { Header } from './Header';
 import { MainContent } from './MainContent';
 

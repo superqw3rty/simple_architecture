@@ -27,10 +27,14 @@ const countLines = (file) =>
     .split('\n')
     .filter((line) => line.trim() !== '').length;
 
-// The only .ts files allowed next to a view: public face, constants, types, hooks and their tests.
-const ROOT_TS_ALLOWED = /^(index|constants|types|use[A-Z]\w*(\.test)?)\.ts$/;
+// The root of a component holds its public face and nothing that runs: the logic lives in logic/ (D-55).
+const ROOT_TS_ALLOWED = new Set(['index.ts', 'constants.ts', 'types.ts']);
+const ROOT_DIRS_ALLOWED = new Set(['logic', 'components']);
+const LOGIC_HINT =
+  'presenter in logic/useName.ts, hooks in logic/hooks/, pure functions in logic/utils/ (D-55)';
+const HOOK_FILE = /^use[A-Z]\w*(\.test)?\.ts$/;
 
-function checkComponentFolder(dir, files) {
+function checkComponentFolder(dir, files, dirs) {
   const name = basename(dir);
   const views = files.filter((file) => file.endsWith('.tsx'));
 
@@ -47,19 +51,61 @@ function checkComponentFolder(dir, files) {
     report(dir, 'component folder must be PascalCase');
   }
 
-  // Pure helpers of a component live in its utils/ folder (D-38).
-  for (const file of files.filter((item) => item.endsWith('.ts') && !ROOT_TS_ALLOWED.test(item))) {
-    report(join(dir, file), `pure functions of a component live in utils/: utils/${file}`);
+  for (const file of files.filter((item) => item.endsWith('.ts') && !ROOT_TS_ALLOWED.has(item))) {
+    report(join(dir, file), `the root of a component holds no logic: ${LOGIC_HINT}`);
+  }
+  for (const sub of dirs.filter((item) => !/^[A-Z]/.test(item) && !ROOT_DIRS_ALLOWED.has(item))) {
+    report(
+      join(dir, sub),
+      `only logic/, components/ and child components live here: ${LOGIC_HINT}`,
+    );
   }
 
   if (files.includes('index.ts')) {
     checkComponentIndex(join(dir, 'index.ts'));
   }
 
-  const isUi = dir.split(sep).includes('ui');
-  const hooks = files.filter((file) => /^use[A-Z].*\.ts$/.test(file));
-  if (isUi && hooks.length > 0) {
-    report(dir, 'components/ui are dumb: no hooks allowed');
+  if (!dirs.includes('logic')) {
+    return;
+  }
+  if (dir.split(sep).includes('ui')) {
+    report(dir, 'components/ui are dumb: no logic/ allowed');
+  }
+  checkLogicFolder(join(dir, 'logic'), name);
+}
+
+// logic/: the presenter at the root, the rest sorted by kind into hooks/, utils/, tasks/ (D-55).
+const LOGIC_KINDS = new Set(['hooks', 'utils', 'tasks']);
+
+function checkLogicFolder(dir, component) {
+  const presenter = new RegExp(`^use${component}(\\.test)?\\.ts$`);
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory() && !LOGIC_KINDS.has(entry.name)) {
+      report(path, 'logic/ holds only hooks/, utils/ and tasks/ folders (D-55)');
+    }
+    if (entry.isFile() && !presenter.test(entry.name)) {
+      report(path, `logic/ root holds only use${component}.ts and its test; ${LOGIC_HINT}`);
+    }
+  }
+  for (const path of listFiles(dir).filter((item) => dirname(item) !== dir)) {
+    const file = basename(path);
+    const kind = relative(dir, path).split(sep)[0];
+    if (file === 'index.ts' || file.endsWith('.tsx')) {
+      report(path, 'logic/ has no index.ts and no views: import ./logic/useName directly (D-55)');
+    } else if (kind === 'hooks' && !HOOK_FILE.test(file)) {
+      report(path, 'logic/hooks/ holds only hooks useName.ts and their tests (D-55)');
+    } else if (kind !== 'hooks' && /^use[A-Z]/.test(file)) {
+      report(path, `a hook in logic/${kind}/: hooks live in logic/hooks/ (D-55)`);
+    }
+  }
+}
+
+// A hook lives in a component's logic/ or in src/hooks, nowhere else (D-55).
+function checkHookPlacement(path) {
+  const parts = relative(SRC, path).split(sep);
+  if (/^use[A-Z]/.test(basename(path)) && !parts.includes('logic') && parts[0] !== 'hooks') {
+    report(path, `a hook outside logic/: ${LOGIC_HINT}; shared hooks go to src/hooks/`);
   }
 }
 
@@ -111,7 +157,7 @@ function checkComponentIndex(path) {
     if (!/^\.\/[A-Z]\w*$/.test(source) || exported.some((name) => !/^[A-Z]/.test(name))) {
       report(
         path,
-        `exports only components and props types from './Name'; a shared helper lives in utils/ of the common ancestor (D-45)`,
+        `exports only components and props types from './Name'; a shared helper lives in logic/utils/ of the common ancestor (D-45)`,
       );
     }
   }
@@ -189,10 +235,13 @@ function checkJsDoc(path) {
 function walk(dir) {
   const entries = readdirSync(dir, { withFileTypes: true });
   const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+  const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 
-  const isComponent = files.some((file) => file.endsWith('.tsx')) && dir !== SRC;
+  // A stray .tsx inside logic/ is reported by checkLogicFolder, logic/ is not a component.
+  const inLogic = relative(SRC, dir).split(sep).includes('logic');
+  const isComponent = files.some((file) => file.endsWith('.tsx')) && dir !== SRC && !inLogic;
   if (isComponent) {
-    checkComponentFolder(dir, files);
+    checkComponentFolder(dir, files, dirs);
   }
   if (files.includes('index.ts')) {
     checkIndexFile(join(dir, 'index.ts'));
@@ -200,6 +249,7 @@ function walk(dir) {
 
   for (const file of files.filter((name) => /\.tsx?$/.test(name))) {
     checkJsDoc(join(dir, file));
+    checkHookPlacement(join(dir, file));
   }
 
   for (const file of files.filter((name) => name.endsWith('.scss'))) {
@@ -222,15 +272,14 @@ function walk(dir) {
 const SHARED_ROOT = join(SRC, 'components');
 const IMPORT_SPEC = /(?:from|import)\s+'([^']+)'/g;
 
-function listSourceFiles(dir) {
+function listFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      return listSourceFiles(path);
-    }
-    return /\.tsx?$/.test(entry.name) ? [path] : [];
+    return entry.isDirectory() ? listFiles(path) : [path];
   });
 }
+
+const listSourceFiles = (dir) => listFiles(dir).filter((path) => /\.tsx?$/.test(path));
 
 function checkSharedFolders() {
   const files = listSourceFiles(SRC);

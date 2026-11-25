@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { getPageItems } from './utils/getPageItems';
 import { toViewItem, type PageViewItem } from './utils/toViewItem';
-import type { PaginationProps } from './Pagination';
+import type { PaginationProps } from '../Pagination';
 
 interface PageStepButton {
   isDisabled: boolean;

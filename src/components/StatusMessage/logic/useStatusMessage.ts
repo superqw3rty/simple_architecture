@@ -1,4 +1,4 @@
-import type { StatusMessageProps } from './StatusMessage';
+import type { StatusMessageProps } from '../StatusMessage';
 
 interface UseStatusMessageResult {
   hasSymbol: boolean;

@@ -1,4 +1,4 @@
-import type { ShowCardProps } from './ShowCard';
+import type { ShowCardProps } from '../ShowCard';
 import { formatShowMeta } from './utils/formatShowMeta';
 
 const UNTITLED = 'Untitled';

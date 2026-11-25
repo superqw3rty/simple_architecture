@@ -2,11 +2,11 @@ import { useCallback, useRef, useState, type RefObject } from 'react';
 import type { ChipProps } from '@/components/ui/Chip';
 import type { Show } from '@/types/show';
 import { paginate } from '@/utils/paginate';
-import type { ResultsProps } from './Results';
-import { PAGE_SIZE } from './constants';
+import type { ResultsProps } from '../Results';
+import { PAGE_SIZE } from '../constants';
 import { formatPageRange } from './utils/formatPageRange';
-import { formatResultsTitle } from '../utils/formatResultsTitle';
-import { useGenreFilter } from './useGenreFilter';
+import { formatResultsTitle } from '@/ShowsExplorer/MainContent/logic/utils/formatResultsTitle';
+import { useGenreFilter } from './hooks/useGenreFilter';
 
 interface UseResultsResult {
   title: string;

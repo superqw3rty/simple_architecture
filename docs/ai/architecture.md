@@ -76,8 +76,8 @@ export const GenreChips: FC<Props> = ({ shows, selected, onChange }) => {
 - Бизнес-правила (что считается избранным, как фильтровать, как кешировать) в презентере не пишутся: им место в таске, а для серверных данных — на backend (D-54).
 
 ```ts
-// ✅ src/ShowsExplorer/MainContent/Results/useResults.ts — читается как оглавление
-// (после переезда, шаг 3 hw2-plan, — Results/logic/useResults.ts; paginate уходит на сервер в шаге 6)
+// ✅ src/ShowsExplorer/MainContent/Results/logic/useResults.ts — читается как оглавление
+// (paginate уходит на сервер в шаге 6 hw2-plan)
 export function useResults({ term, shows }: ResultsProps): UseResultsResult {
   const [page, setPage] = useState(1);
   const headingRef = useRef<HTMLHeadingElement>(null);

@@ -1,4 +1,4 @@
-import type { CardImageProps } from './CardImage';
+import type { CardImageProps } from '../CardImage';
 
 interface UseCardImageResult {
   hasRating: boolean;

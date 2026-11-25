@@ -32,7 +32,24 @@ const REACT_HOOKS = [
 ];
 
 const VIEW_MESSAGE =
-  'View (.tsx) holds JSX only. Move logic to the presenter useComponentName.ts (docs/ai/architecture.md).';
+  'View (.tsx) holds JSX only. Move logic to the presenter logic/useComponentName.ts (docs/ai/architecture.md).';
+
+// D-52: raw server types never leave src/api.
+const RAW_API_TYPES = {
+  group: ['@/types/api', '@/types/api/*'],
+  message: 'Raw API types stay inside src/api. Use domain types (docs/ai/api-layer.md).',
+};
+
+// D-56: data changes go through a task and the queryClient singleton, not through a hook.
+const NO_MUTATION = {
+  name: '@tanstack/react-query',
+  importNames: ['useMutation'],
+  message:
+    'Write data in a task with queryClient from @/api, not useMutation (docs/ai/tasks.md, D-56).',
+};
+
+const TASK_MESSAGE =
+  'A task is a plain function without React: no hooks, no components (docs/ai/tasks.md, D-54).';
 
 export default defineConfig([
   // 1. Folders ESLint never looks into.
@@ -108,20 +125,31 @@ export default defineConfig([
   },
 
   // 5b. Raw server types stay inside src/api: hooks and presenters work with domain types (D-52).
-  // Views (.tsx) get the same ban in block 6, which owns no-restricted-imports for them.
+  // No useMutation: writes are tasks (D-56). Views (.tsx) and tasks get the same bans
+  // in blocks 5c and 6: each block replaces no-restricted-imports, it does not merge it.
   {
     files: ['src/**/*.ts'],
     ignores: ['src/api/**'],
     rules: {
+      'no-restricted-imports': ['error', { paths: [NO_MUTATION], patterns: [RAW_API_TYPES] }],
+    },
+  },
+
+  // 5c. Tasks know nothing about React (D-54): the cache is the queryClient singleton from @/api.
+  {
+    files: ['**/tasks/**/*.ts'],
+    rules: {
       'no-restricted-imports': [
         'error',
         {
+          paths: [{ name: 'react', message: TASK_MESSAGE }],
           patterns: [
+            { group: ['react-dom', 'react-dom/*', '@tanstack/react-*'], message: TASK_MESSAGE },
             {
-              group: ['@/types/api', '@/types/api/*'],
-              message:
-                'Raw API types stay inside src/api. Use domain types (docs/ai/api-layer.md).',
+              group: ['@/hooks', '@/hooks/*', '@/components', '@/components/*'],
+              message: TASK_MESSAGE,
             },
+            RAW_API_TYPES,
           ],
         },
       ],
@@ -152,10 +180,8 @@ export default defineConfig([
           ],
           patterns: [
             { group: ['@/api', '@/api/*', '@/hooks', '@/hooks/*'], message: VIEW_MESSAGE },
-            {
-              group: ['@/types/api', '@/types/api/*'],
-              message: 'Raw API types stay inside src/api. A view works with domain types.',
-            },
+            { group: ['@/tasks', '@/tasks/*'], message: VIEW_MESSAGE },
+            RAW_API_TYPES,
           ],
         },
       ],
