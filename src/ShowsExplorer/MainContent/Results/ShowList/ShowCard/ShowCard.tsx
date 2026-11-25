@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import type { Show } from '@/types/show';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import styles from './ShowCard.module.scss';
-import { useShowCard } from './useShowCard';
+import { useShowCard } from './logic/useShowCard';
 import { CardImage } from './CardImage';
 
 export interface ShowCardProps {
