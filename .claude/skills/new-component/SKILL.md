@@ -13,7 +13,7 @@ description: Создать новый React-компонент по прави�
 
 Выбери папку по дереву решений из `docs/ai/structure.md` («Куда положить компонент»): одному родителю — прямо в его папку, `components/` — только для общих (D-42). Если место неочевидно — спроси пользователя, не угадывай.
 
-Общая для родителя и ребёнка чистая функция или константа — в `utils/` / `constants.ts` их ближайшего общего предка, не в `index.ts` (D-45).
+Общая для родителя и ребёнка чистая функция, таска или константа — в `logic/utils/`, `logic/tasks/` / `constants.ts` их ближайшего общего предка, не в `index.ts` (D-45).
 
 ## 2. Создай файлы
 
@@ -26,7 +26,7 @@ export { Name } from './Name';
 ```tsx
 import type { FC } from 'react';
 import styles from './Name.module.scss';
-import { useName } from './useName';
+import { useName } from './logic/useName';
 
 export interface NameProps {
   // ...
@@ -43,9 +43,9 @@ export const Name: FC<NameProps> = (props) => {
 };
 ```
 
-`useName.ts` — вся логика:
+`logic/useName.ts` — презентер (D-55):
 ```ts
-import type { NameProps } from './Name';
+import type { NameProps } from '../Name';
 
 interface UseNameResult {
   title: string;
@@ -63,9 +63,14 @@ export function useName({ ... }: NameProps): UseNameResult {
 
 Скелетон загрузки, если блок его требует, — дочерняя папка `Name/NameSkeleton/` и вторая строка в `index.ts`: `export { NameSkeleton } from './NameSkeleton'` (D-31). Общая раскладка компонента и скелетона — partial `_name.scss` с миксинами.
 
+Остальная логика — тоже в `logic/` (`docs/ai/structure.md`, шаблон папки):
+- доп. хуки презентера — `logic/hooks/useThing.ts`;
+- чистые функции для view — `logic/utils/formatThing.ts`;
+- действия пользователя (запись данных, сценарий из шагов) — таска `logic/tasks/doThing.ts` по `docs/ai/tasks.md`; если таска уже нужна другой ветке — `src/tasks/`.
+
 Исключения:
-- `components/ui/*` — без `useName.ts` вообще.
-- У компонента нет логики (пропсы → JSX) — `useName.ts` не создаётся.
+- `components/ui/*` — без `logic/` вообще.
+- У компонента нет логики (пропсы → JSX) — `logic/` не создаётся.
 
 ## 3. Проверь себя
 
@@ -73,8 +78,9 @@ export function useName({ ... }: NameProps): UseNameResult {
 - [ ] Компонент объявлен как `export const Name: FC<NameProps>` (D-28).
 - [ ] В `.tsx` нет хуков React, вычислений, обработчиков с телом (в том числе `onClick={() => …}`), импортов из `@/api` и `@/hooks`.
 - [ ] Презентер возвращает данные в готовом для JSX виде (флаги `is*`, обработчики `on*`).
+- [ ] Бизнес-логика — в таске без React; презентер только вызывает её, держит `isPending`/ошибку и решает про toast и навигацию.
 - [ ] Действие, которое убирает элемент в фокусе или делает его `disabled`, заранее переводит фокус через `ref` (`accessibility.md`).
 - [ ] Каждый файл ≤ 120 строк.
-- [ ] Чистые функции лежат в `utils/` папки компонента (D-38) и покрыты тестом `name.test.ts` рядом; хуки с логикой — тоже.
+- [ ] Логика лежит в `logic/` (`hooks/`, `utils/`, `tasks/`, D-55) и покрыта тестами `name.test.ts` рядом.
 - [ ] Родитель импортирует компонент через папку: `./Name`.
 - [ ] `pnpm check` зелёный.
