@@ -1,8 +1,26 @@
 # API-слой
 
-Всё общение с сервером живёт в `src/api/`. Слой ничего не знает о React и компонентах — это обычные асинхронные функции, которые можно вызвать из теста или Node.
+Всё общение фронта с сервером живёт в `src/api/`. Слой ничего не знает о React, компонентах и тасках — это обычные асинхронные функции, которые можно вызвать из теста, таски или Node. Это и есть «абстракция сети» из лекции: таска вызывает `addFavorite(id)` и не знает, HTTP там или сокет.
+
+**Целевая схема (ДЗ-2, D-58):** фронт ходит только в **свой** backend (`/api`). TVmaze, его DTO и маппер переезжают на сервер (`backend.md`). До шага 6 `docs/homework/hw2-plan.md` в коде ещё живёт `src/api/tvmaze/` — примеры ниже описывают его.
 
 ## Структура
+
+Целевая:
+
+```
+src/api/
+  http.ts               # request<T>(url, { method, params, body, signal }) — единственное место с fetch; добавляет X-Client-Id
+  clientId.ts           # getClientId(): UUID браузера в localStorage (D-59)
+  ApiError.ts
+  queryClient.ts        # createQueryClient() + синглтон queryClient (D-56)
+  shows/                # один ресурс нашего API = одна папка: fetchShowsPage.ts, showQueries.ts, index.ts
+  favorites/            # addFavorite.ts, removeFavorite.ts, fetchFavorites.ts, favoriteQueries.ts, index.ts
+  index.ts              # наружу: функции эндпоинтов, фабрики, queryClient
+shared/                 # типы ответов нашего API, общие с сервером
+```
+
+Сейчас (до шага 6):
 
 ```
 src/api/
@@ -30,8 +48,8 @@ src/types/
 3. **Наружу — только доменные модели.** Типы из `@/types/api` используются только внутри `src/api` и не попадают в хуки и компоненты (ESLint, D-52). Сервер переименовал поле — меняется один маппер.
 4. **Маппер терпим к данным**: любое поле может прийти `null` или отсутствовать. Маппер подставляет значения по умолчанию (`genres ?? []`, `image?.medium ?? null`), чистит HTML (`stripHtml`), приводит форматы (год из даты).
 5. **Ошибки — всегда `ApiError`** с понятным пользователю `message` и `status`. `AbortError` пробрасывается как есть — TanStack Query распознаёт отмену сам.
-6. **Из React API вызывается только через фабрику запросов** и `useQuery` в хуке (см. `data-fetching.md`). View и чистые функции API не вызывают.
-7. **API-слой не импортирует** `react`, компоненты, хуки. Из `@tanstack/react-query` — только `QueryClient` и `queryOptions` (обычные функции без React). Зависимость направлена только внутрь: `hooks → api → types`. Проверяет ESLint.
+6. **Чтение из React — только через фабрику запросов** и `useQuery` в хуке (см. `data-fetching.md`). **Запись — только из таски** (`tasks.md`, D-56). View, презентеры напрямую и чистые функции API не вызывают.
+7. **API-слой не импортирует** `react`, компоненты, хуки, таски, сторы. Из `@tanstack/react-query` — только `QueryClient` и `queryOptions` (обычные функции без React). Зависимость направлена только внутрь: `hooks → api → types`. Проверяет ESLint.
 8. URL и параметры не склеиваются руками — параметры передаются в `request(url, { params })`.
 9. **Фабрика запросов** `<entity>Queries.ts` — объект с методами: уровни ключа (`all()`, `searches()`) и `queryOptions` на каждый эндпоинт. `queryFn` пробрасывает `signal` из контекста запроса.
 

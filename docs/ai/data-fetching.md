@@ -1,12 +1,12 @@
 # Загрузка данных
 
-Запросы из React идут через TanStack Query (`@tanstack/react-query` v5): кэш, дедупликация, отмена, повторы. Своих механизмов запросов (кэшей, `useEffect` + `fetch`, ручных `AbortController`) не пишем — D-22.
+Чтение данных из React идёт через TanStack Query (`@tanstack/react-query` v5): кэш, дедупликация, отмена, повторы. Своих механизмов запросов (кэшей, `useEffect` + `fetch`, ручных `AbortController`) не пишем — D-22. Кэш TanStack Query — это **Entity** для серверных данных; изменения данных делают таски (D-56, раздел ниже).
 
 ## Из чего состоит запрос
 
 1. **Функция эндпоинта** в `src/api/<service>/` принимает `signal` и возвращает доменную модель (`api-layer.md`).
 2. **Фабрика запросов** `src/api/<service>/<entity>Queries.ts` — единственное место, где собираются `queryKey`, `queryFn` (с пробросом `signal`), `enabled` и `staleTime` через `queryOptions()`.
-3. **Фичевый хук** рядом с презентером вызывает `useQuery(showQueries.search(term))`. Презентер переводит результат в флаги для view; view про запросы не знает.
+3. **Фичевый хук** в `logic/hooks/` компонента вызывает `useQuery(showQueries.search(term))`. Презентер переводит результат в флаги для view; view про запросы не знает.
 
 ```ts
 // src/ShowsExplorer/useShowsExplorer.ts — debounce до ключа, рядом с решением о раскладке (D-36);
@@ -31,7 +31,7 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
 ## Ключи
 
 - Иерархия `[сущность, действие, ...параметры]`: `['shows', 'search', 'batman']`. Уровни отдаются методами фабрики: `showQueries.all()`, `showQueries.searches()`.
-- Всё, от чего зависит ответ, — в ключе. То, что не влияет на ответ (страница клиентской пагинации, выбранный жанр), — не в ключе.
+- Всё, от чего зависит ответ, — в ключе. Пагинация и жанр считаются на сервере (D-58), поэтому они в ключе: `['shows', 'page', { term, genre, page }]`. То, что не влияет на ответ (открыт ли диалог, текст поля до debounce), — не в ключе.
 - Инвалидация — по префиксу из фабрики: `queryClient.invalidateQueries({ queryKey: showQueries.all() })`.
 
 ## Статусы v5 → UI
@@ -54,11 +54,26 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
 
 ## Клиент
 
-`createQueryClient()` в `src/api/queryClient.ts`, провайдер — `src/QueryProvider` в `main.tsx`.
+`createQueryClient()` в `src/api/queryClient.ts` создаёт **один модульный синглтон** `export const queryClient`, его же отдаёт `src/QueryProvider` (D-56). Синглтон нужен таскам: они импортируют кеш напрямую, как стор (`tasks.md`). В тестах — `queryClient.clear()` в `beforeEach`.
 
 - Повторы: сетевая ошибка и 5xx — до 2 повторов с backoff, 4xx — без повторов (`shouldRetry`).
 - `refetchOnWindowFocus: false`. `staleTime` задаётся в фабрике для каждого запроса (поиск — 5 минут).
 - Кэш живёт до перезагрузки страницы; персистентность не подключаем, пока нет требования.
+
+## Изменение данных — через таски (D-56)
+
+`useMutation` не используем. Изменение — это действие пользователя, то есть таска (`tasks.md`): обычная `async`-функция вызывает функцию эндпоинта из `@/api` и потом обновляет кеш через импортированный `queryClient`.
+
+| Что нужно после записи | Метод `queryClient` |
+|---|---|
+| перезапросить всё затронутое | `invalidateQueries({ queryKey: favoriteQueries.all() })` — по префиксу из фабрики |
+| сразу показать известный результат | `setQueryData(key, updater)` / `setQueriesData({ queryKey }, updater)` |
+| прочитать текущее значение (снимок, без подписки) | `getQueryData(key)` |
+| получить данные через кеш внутри сценария | `fetchQuery(options)` / `ensureQueryData(options)` |
+
+Презентер вызывает таску, держит `isPending` и ошибку в своём `useState` и показывает результат (toast, переход). Компоненты по-прежнему читают данные через `useQuery`: `getQueryData` в таске — разовый снимок, на изменения он не подписывает.
+
+**Почему не `useMutation`:** это React-обёртка над действием того же рода, что thunk в лекции. Логика оказывается привязана к хуку и компоненту, её нельзя вызвать из другой таски или теста без React.
 
 ## Обязательный UX запросов
 
@@ -78,6 +93,5 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
 
 ## Когда что подключать
 
-- `useMutation` + `invalidateQueries` по ключу фабрики — когда появятся изменения данных.
-- `placeholderData: keepPreviousData` — если понадобится серверная пагинация без мигания.
+- `placeholderData: keepPreviousData` — для серверной пагинации и смены жанра без мигания скелетоном (запрос выдачи).
 - `@tanstack/react-query-devtools` — по запросу, через `dependencies.md`.

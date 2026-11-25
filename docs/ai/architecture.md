@@ -1,6 +1,14 @@
-# Архитектура: View и Presenter
+# Архитектура: слои VIPER
 
-Simple Architecture = Clean Architecture + VIPER. На текущей неделе курса действуют два слоя: **View** и **Presenter**. Остальные (Interactor, Entity, Router) добавятся позже через `decisions.md`.
+Simple Architecture = Clean Architecture + VIPER. Слои и где они живут:
+
+| Буква | Слой | Где | Подробно |
+|---|---|---|---|
+| **V** | View — JSX компонента | `Component/Component.tsx` | ниже |
+| **I** | Interactor = **Tasks** — бизнес-логика, варианты использования | `Component/logic/tasks/`, `src/tasks/`, `server/tasks/` | `tasks.md` |
+| **P** | Presenter — мост между UI и тасками | `Component/logic/useComponent.ts` | ниже |
+| **E** | Entity — стор: данные + методы их изменения | кеш TanStack Query (`queryClient`), `src/stores/`, `server/entities/` | `data-fetching.md`, `backend.md` |
+| **R** | Router — навигация | `src/router/`, вызовы — в презентере | `routing.md` |
 
 Цель архитектуры — уменьшить трудозатраты на создание и, главное, на **сопровождение**. Код читают чаще, чем пишут: оптимизируй под того, кто откроет файл через два месяца.
 
@@ -22,7 +30,7 @@ View отвечает только за то, **что увидит пользо
 Запрещено:
 - любые хуки React (`useState`, `useEffect`, `useMemo`, `useCallback`, `useRef`…) и хуки из `@/hooks`;
 - вызов чужого презентера или второго хука;
-- импорт из `@/api`;
+- импорт из `@/api`, `@/tasks`, `@/stores` и папки `logic/` кроме своего презентера;
 - вычисления и преобразования данных: `filter`, `sort`, `reduce`, форматирование дат/чисел, сборка строк для отображения (кроме `className`), арифметика;
 - обработчики с телом: `onClick={() => { setA(1); track(); }}`;
 - условия сложнее одного готового булева флага: `a && b.length > 0 && !c` — это логика, презентер должен отдать `isListVisible`.
@@ -56,17 +64,20 @@ export const GenreChips: FC<Props> = ({ shows, selected, onChange }) => {
 };
 ```
 
-## Presenter — `useComponentName.ts`
+## Presenter — `logic/useComponentName.ts`
 
 Презентер забирает **100% логики** компонента: достаёт данные и готовит их для отображения.
 
 - Принимает пропсы компонента, возвращает плоский объект «всё, что нужно JSX»: готовые значения, флаги `is*`/`has*`, обработчики `on*`, `ref` для управления фокусом.
 - Отдаёт данные **в форме, удобной view**: не `shows` + `page`, а `visibleShows`; не `status`, а `isLoading`, `isEmpty`, `hasError`.
 - Не возвращает JSX и не импортирует компоненты и стили. Типы пропсов своего и дочерних компонентов импортирует через `import type` (D-50).
-- Не делает всё сам: презентер — это «оглавление». Куски логики выносятся в отдельные хуки (`useGenreFilter.ts`) и чистые функции (`utils/formatPageRange.ts`) рядом. Презентер их только соединяет.
+- Не делает всё сам: презентер — это «оглавление». Куски логики выносятся в хуки (`logic/hooks/useGenreFilter.ts`), чистые функции (`logic/utils/formatPageRange.ts`) и таски (`logic/tasks/`, `@/tasks`). Презентер их только соединяет.
+- Знает, **на какое событие какую таску вызвать**, держит состояние вызова (`isPending`, ошибка) в своём `useState` и решает, что показать после: toast, переход на другую страницу (`tasks.md`, `routing.md`).
+- Бизнес-правила (что считается избранным, как фильтровать, как кешировать) в презентере не пишутся: им место в таске, а для серверных данных — на backend (D-54).
 
 ```ts
 // ✅ src/ShowsExplorer/MainContent/Results/useResults.ts — читается как оглавление
+// (после переезда, шаг 3 hw2-plan, — Results/logic/useResults.ts; paginate уходит на сервер в шаге 6)
 export function useResults({ term, shows }: ResultsProps): UseResultsResult {
   const [page, setPage] = useState(1);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -98,10 +109,13 @@ export function useResults({ term, shows }: ResultsProps): UseResultsResult {
 ## Куда течёт зависимость
 
 ```
-View (.tsx) ──▶ Presenter (useX.ts) ──▶ хуки / чистые функции ──▶ @/api ──▶ сеть
+View (.tsx) ──▶ Presenter (logic/useX.ts) ──▶ хуки, utils ──▶ useQuery(фабрика из @/api)
+                       │
+                       └──▶ Tasks ──▶ @/api (функции эндпоинтов) ──▶ http.ts ──▶ сеть
+                              └────▶ Entity (queryClient, src/stores)
 ```
 
-Стрелки только в одну сторону. View не знает про API и кэш; API не знает про React.
+Стрелки только в одну сторону. View не знает про API и кэш; таски не знают про React и роутер; API не знает ни про React, ни про таски.
 
 ## `React.memo` и оптимизации
 
