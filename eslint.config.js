@@ -51,6 +51,20 @@ const NO_MUTATION = {
 const TASK_MESSAGE =
   'A task is a plain function without React: no hooks, no components (docs/ai/tasks.md, D-54).';
 
+// D-63: Node resolves only the "imports" field of package.json, not tsconfig paths or Vite aliases.
+const NO_ALIAS = {
+  group: ['@/*', '@shared', '@shared/*', '@server', '@server/*', '@client', '@client/*', '../../*'],
+  message:
+    'server/ and shared/ import other folders via #server/* or #shared, nearby files via ./ or ../ (docs/ai/backend.md, D-63).',
+};
+
+const HONO = {
+  group: ['hono', 'hono/*', '@hono/*'],
+  message: 'Hono only in server/main.ts, server/app.ts and server/routes/ (docs/ai/backend.md).',
+};
+
+const SERVER_REACT_MESSAGE = 'server/ and shared/ do not depend on React (docs/ai/backend.md).';
+
 export default defineConfig([
   // 1. Folders ESLint never looks into.
   globalIgnores(['dist', 'coverage']),
@@ -219,7 +233,36 @@ export default defineConfig([
     },
   },
 
-  // 8. Tooling files run in Node, not in the browser.
+  // 8. Backend and API contract (D-58). Node runs these files as is, so the only aliases are
+  // #server/* and #shared from package.json "imports" (D-63), always with .ts. Hono lives in the transport layer only, tasks never see it.
+  // This block replaces 5c for server/tasks, so it repeats the React ban.
+  {
+    files: ['server/**/*.ts', 'shared/**/*.ts'],
+    languageOptions: { globals: globals.node },
+    rules: {
+      'max-lines': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: false,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: false,
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ name: 'react', message: SERVER_REACT_MESSAGE }], patterns: [NO_ALIAS, HONO] },
+      ],
+    },
+  },
+
+  // 8a. The transport layer may import Hono; aliases stay banned.
+  {
+    files: ['server/main.ts', 'server/app.ts', 'server/routes/**/*.ts', 'server/**/*.test.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [NO_ALIAS] }] },
+  },
+
+  // 9. Tooling files run in Node, not in the browser.
   {
     files: ['*.{js,ts}', 'scripts/**/*.mjs', '.claude/hooks/**/*.mjs'],
     languageOptions: { globals: globals.node },

@@ -25,12 +25,25 @@ export default defineConfig(({ command }) => {
       },
     },
     resolve: {
+      // #server/* and #shared come from "imports" in package.json, Vite resolves them itself (D-63).
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },
+    // Locally the client calls its own origin; Vite forwards /api to `pnpm dev:server`, so no CORS.
+    server: {
+      proxy: { '/api': 'http://localhost:3001' },
+    },
     test: {
-      environment: 'jsdom',
-      include: ['src/**/*.test.ts'],
       restoreMocks: true,
+      projects: [
+        {
+          extends: true,
+          test: { name: 'client', environment: 'jsdom', include: ['src/**/*.test.ts'] },
+        },
+        {
+          extends: true,
+          test: { name: 'server', environment: 'node', include: ['server/**/*.test.ts'] },
+        },
+      ],
     },
   };
 });

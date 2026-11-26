@@ -4,14 +4,20 @@
     {
       "name": "dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev", "--port", "5173", "--strictPort"],
+      "runtimeArgs": ["dev:client", "--port", "5173", "--strictPort"],
       "port": 5173
     },
     {
       "name": "dev-alt",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev", "--port", "5174", "--strictPort"],
+      "runtimeArgs": ["dev:client", "--port", "5174", "--strictPort"],
       "port": 5174
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:server"],
+      "port": 3001
     }
   ]
 }

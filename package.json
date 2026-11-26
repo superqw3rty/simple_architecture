@@ -3,9 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "imports": {
+    "#server/*": "./server/*",
+    "#shared": "./shared/index.ts"
+  },
   "packageManager": "pnpm@12.15.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "pnpm run \"/^dev:/\"",
+    "dev:client": "vite",
+    "dev:server": "node --watch --env-file-if-exists=.env  server/main.ts",
+    "start": "node server/main.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
@@ -18,7 +25,9 @@
     "check": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm check:arch && pnpm test"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.11",
     "@tanstack/react-query": "^5.107.1",
+    "hono": "^4.13.21",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

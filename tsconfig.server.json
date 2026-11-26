@@ -1,0 +1,25 @@
+{
+  // server/ runs in Node 24 without a build step: Node strips the types itself (docs/ai/backend.md).
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.server.tsbuildinfo",
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    // Only syntax Node can strip: no enum, namespace or parameter properties.
+    "erasableSyntaxOnly": true,
+    // Imports carry the .ts extension, exactly as Node resolves them.
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["server", "shared"]
+}
