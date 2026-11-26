@@ -30,6 +30,7 @@
 |---|---|---|---|
 | `react`, `react-dom` | UI | — | — |
 | `@tanstack/react-query` | кэш, отмена, дедупликация и повторы запросов (D-22) | свой `useRequest` (был до D-22), SWR | импортируется только в `src/api/queryClient.ts`, фабриках `*Queries.ts`, `QueryProvider` и фичевых хуках |
+| `hono`, `@hono/node-server` | HTTP-сервер backend (D-58) | `node:http` (свой роутер, CORS, парсинг), Fastify (избыточен), Express (устарел) | только `server/main.ts`, `server/app.ts`, `server/routes/` (ESLint, блок 8) |
 
 ### Dev
 
@@ -50,7 +51,6 @@
 
 | Пакет | Зачем | Альтернативы | Когда ставить | Где живёт |
 |---|---|---|---|---|
-| `hono`, `@hono/node-server` | HTTP-сервер backend (D-58) | `node:http` (свой роутер, CORS, парсинг), Fastify (избыточен), Express (устарел) | шаг 4 `hw2-plan.md` | только `server/app.ts`, `server/routes/`, `server/main.ts` |
 | `@tanstack/react-router` | страницы `/` и `/favorites`, типизированные search-параметры (D-57) | React Router (без валидации search), свой роутер на hash | шаг 8 | `src/router/`, `<Link>` во view, хуки — в `logic/` |
 
 После установки строка переносится в «Реестр».
