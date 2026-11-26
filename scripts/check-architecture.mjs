@@ -312,8 +312,58 @@ function checkSharedFolders() {
   }
 }
 
+// server/tasks: a folder per task, a folder per util of a task; each holds its file, its test
+// and an index.ts that re-exports it (D-65, docs/ai/backend.md).
+const SERVER_TASKS = join('server', 'tasks');
+
+function checkUnitFolder(dir, kind) {
+  const name = basename(dir);
+  const entries = readdirSync(dir, { withFileTypes: true });
+  const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+  const expected = [`${name}.ts`, `${name}.test.ts`, 'index.ts'];
+
+  for (const file of expected.filter((item) => !files.includes(item))) {
+    report(dir, `${kind} folder needs ${file} (D-65)`);
+  }
+  for (const file of files.filter((item) => !expected.includes(item))) {
+    report(
+      join(dir, file),
+      `${kind} folder holds only ${expected.join(', ')}; a helper goes to utils/<name>/ (D-65)`,
+    );
+  }
+  if (files.includes('index.ts')) {
+    checkIndexFile(join(dir, 'index.ts'));
+  }
+
+  for (const sub of entries.filter((entry) => entry.isDirectory())) {
+    const path = join(dir, sub.name);
+    if (kind === 'task' && sub.name === 'utils') {
+      checkUnitFolders(path, 'util', 'a util lives in its own folder: utils/name/name.ts (D-65)');
+    } else {
+      report(
+        path,
+        kind === 'task'
+          ? 'a task folder holds only utils/ (D-65)'
+          : 'a util folder has no subfolders (D-65)',
+      );
+    }
+  }
+}
+
+function checkUnitFolders(dir, kind, looseFileMessage) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      checkUnitFolder(path, kind);
+    } else {
+      report(path, looseFileMessage);
+    }
+  }
+}
+
 walk(SRC);
 checkSharedFolders();
+checkUnitFolders(SERVER_TASKS, 'task', 'a task lives in its own folder: tasks/name/name.ts (D-65)');
 checkTokenGrid();
 checkSharedHooks(join(SRC, 'hooks'));
 

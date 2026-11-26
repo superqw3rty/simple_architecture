@@ -1,6 +1,6 @@
 # Неделя 2: Tasks + ДЗ-2 (backend, кеш, избранное)
 
-**Статус (2026-11-25):** шаг 1 (правила) сделан. Шаг 2: макеты сделаны агентом в новом файле `fQvS5QfBtUC7AWGkEH9YC9` (Pro), долг D-35/D-43 закрыт; макет согласован 2026-11-25 (что где — `docs/design/figma.md`). Шаг 3: код переехал в `logic/`, проверки в `check:arch` и ESLint добавлены. Шаги 4–12 пользователь делает сам; правила для них — в `docs/ai/` (D-54…D-62).
+**Статус (2026-11-25):** шаг 1 (правила) сделан. Шаг 2: макеты сделаны агентом в новом файле `fQvS5QfBtUC7AWGkEH9YC9` (Pro), долг D-35/D-43 закрыт; макет согласован 2026-11-25 (что где — `docs/design/figma.md`). Шаг 3: код переехал в `logic/`, проверки в `check:arch` и ESLint добавлены. Шаг 4: каркас сделан агентом по просьбе пользователя — `hono`, скрипты (`pnpm dev` = клиент + сервер), `shared/` с типами контракта, `tsconfig.server.json`, alias `#shared` (D-63), proxy, Vitest-проекты `client`/`server`, ESLint для `server/` и `shared/`, `server/main.ts` + `app.ts` с `GET /api/health`; `tvmaze/` переезжает в шаге 5. Шаги 5–12 пользователь делает сам; правила для них — в `docs/ai/` (D-54…D-62).
 
 ## Context
 
@@ -162,17 +162,17 @@ src/tasks/toggleFavorite/                 # общие таски (как src/co
 
 ### Шаг 4. Каркас backend
 - `server/` в корне. Запуск `node --watch server/main.ts` (type stripping). `tsconfig.server.json` с `erasableSyntaxOnly`, `allowImportingTsExtensions`, `verbatimModuleSyntax` и ссылкой из `tsconfig.json`, чтобы его покрывал `tsc -b`.
-- `shared/` — только типы контракта (`Show`, `ShowsPage`, `GenreCount`, `FavoritesList`). Фронт импортирует через алиас `@shared`, сервер — относительным путём. `src/types/show.ts` реэкспортирует.
+- `shared/` — только типы контракта (`Show`, `ShowsPage`, `GenreCount`, `FavoritesList`). Фронт и сервер импортируют через `#shared` (D-63). `src/types/show.ts` реэкспортирует.
 - Скрипты `dev:server` и `start`, Vite proxy `/api`, `.claude/launch.json` (+ конфиг `server`), Vitest `include` дополнить `server/**`, ESLint — node globals для `server/`.
 - Структура:
   ```
   server/
     main.ts  app.ts                         # Hono app, cors, роуты подключаются тут
     routes/shows.ts  routes/favorites.ts    # «презентер»: парсинг → таска → статус
-    tasks/searchShows/{searchShows.ts, filterByGenre.ts, countGenres.ts, paginate.ts, *.test.ts}
-    tasks/addToFavorites.ts  removeFromFavorites.ts  getFavorites.ts (+ тесты)
-    tasks/fetchWithCache.ts (+ тест)        # кеш 5 мин
-    entities/cache.ts       # const cache: Record<string, { data; expiresAt }> = {}
+    tasks/searchShows/  searchShows.ts + utils/{filterByGenre,countGenres,paginate}/   # раскладка D-65
+    tasks/addToFavorites/  removeFromFavorites/  getFavorites/
+    tasks/getOrLoad/  tasks/fetchWithCache/  # кеш 5 мин
+    entities/cache.ts       # Map с лимитом 500 (D-64)
     entities/favorites.ts   # const favorite: Record<number, Show> = {}
     tvmaze/{request.ts, mapShow.ts, stripHtml.ts, types.ts}   # переезжают из src/
   ```
