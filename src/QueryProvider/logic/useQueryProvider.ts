@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { queryClient } from '@/api/queryClient';
+import { queryClient } from '@/api';
 
 interface UseQueryProviderResult {
   client: QueryClient;

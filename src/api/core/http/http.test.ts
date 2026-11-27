@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { ApiError } from './ApiError';
+import { ApiError } from '../ApiError';
 import { request } from './http';
 
 // API_URL is read on import: a getter lets every case pick its own value.
 const config = vi.hoisted(() => ({ apiUrl: '' }));
-vi.mock('./config', () => ({
+vi.mock('../config', () => ({
   get API_URL(): string {
     return config.apiUrl;
   },

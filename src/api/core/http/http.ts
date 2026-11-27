@@ -1,5 +1,5 @@
-import { ApiError, isAbortError } from './ApiError';
-import { API_URL } from './config';
+import { ApiError, isAbortError } from '../ApiError';
+import { API_URL } from '../config';
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
 

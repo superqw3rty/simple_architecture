@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { queryClient } from '@/api/queryClient';
+import { queryClient } from '@/api';
 import { useQueryProvider } from './useQueryProvider';
 
 describe('useQueryProvider', () => {

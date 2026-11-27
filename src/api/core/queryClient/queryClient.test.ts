@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
-import { ApiError } from './ApiError';
+import { ApiError } from '../ApiError';
 import { createQueryClient, queryClient, shouldRetry } from './queryClient';
 
 describe('queryClient', () => {

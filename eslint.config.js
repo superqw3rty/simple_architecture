@@ -48,6 +48,13 @@ const NO_MUTATION = {
     'Write data in a task with queryClient from @/api, not useMutation (docs/ai/tasks.md, D-56).',
 };
 
+// D-68: outside src/api everything comes from '@/api'; its index.ts decides what is public.
+// '@/api/tvmaze' is the old flat client, allowed until step 6.4 of docs/homework/hw2-plan.md deletes it.
+const API_INTERNALS = {
+  group: ['@/api/*', '!@/api/tvmaze'],
+  message: "Import from '@/api', not from its folders (docs/ai/api-layer.md, D-68).",
+};
+
 const TASK_MESSAGE =
   'A task is a plain function without React: no hooks, no components (docs/ai/tasks.md, D-54).';
 
@@ -97,17 +104,21 @@ export default defineConfig([
       ],
       // Debug output does not ship; an error, because pnpm check passes on warnings (D-52).
       'no-console': 'error',
-      // All network access goes through src/api/http.ts.
+      // All network access goes through request() in src/api/core/http (D-68).
       'no-restricted-globals': [
         'error',
-        { name: 'fetch', message: 'Use request() from @/api/http (docs/ai/api-layer.md).' },
+        {
+          name: 'fetch',
+          message:
+            'Network goes through src/api: request() in src/api/core/http (docs/ai/api-layer.md).',
+        },
       ],
     },
   },
 
   // 5. The single exception to the fetch ban: the HTTP client itself.
   {
-    files: ['src/api/http.ts'],
+    files: ['src/api/core/http/http.ts'],
     rules: { 'no-restricted-globals': 'off' },
   },
 
@@ -145,7 +156,10 @@ export default defineConfig([
     files: ['src/**/*.ts'],
     ignores: ['src/api/**'],
     rules: {
-      'no-restricted-imports': ['error', { paths: [NO_MUTATION], patterns: [RAW_API_TYPES] }],
+      'no-restricted-imports': [
+        'error',
+        { paths: [NO_MUTATION], patterns: [RAW_API_TYPES, API_INTERNALS] },
+      ],
     },
   },
 
@@ -164,6 +178,7 @@ export default defineConfig([
               message: TASK_MESSAGE,
             },
             RAW_API_TYPES,
+            API_INTERNALS,
           ],
         },
       ],
