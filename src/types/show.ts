@@ -1,2 +1,2 @@
-// The domain model is part of the API contract and lives in shared/ (D-58).
-export type { Show, ShowStatus } from '#shared';
+// The domain model and the search page are part of the API contract and live in shared/ (D-58).
+export type { GenreCount, Show, ShowListItem, ShowsPage, ShowStatus } from '#shared';

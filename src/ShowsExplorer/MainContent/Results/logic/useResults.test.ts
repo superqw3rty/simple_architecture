@@ -1,72 +1,109 @@
 import { act, renderHook, type RenderHookResult } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { Show } from '@/types/show';
+import type { ShowListItem, ShowsPage } from '@/types/show';
 import { formatPageRange } from './utils/formatPageRange';
 import { formatResultsTitle } from '@/ShowsExplorer/MainContent/logic/utils/formatResultsTitle';
+import type { ResultsProps } from '../Results';
 import { useResults } from './useResults';
 
-const show = (id: number, genre: string): Show => ({
+const show = (id: number): ShowListItem => ({
   id,
   name: `Show ${id}`,
-  genres: [genre],
+  genres: ['Drama'],
   imageUrl: null,
   rating: null,
   year: null,
   language: null,
   status: null,
   summary: '',
+  isFavorite: false,
 });
 
-// 7 shows: 2 comedies and 5 dramas, that is 3 pages of 3.
-const SHOWS = [1, 2, 3, 4, 5, 6, 7].map((id) => show(id, id <= 2 ? 'Comedy' : 'Drama'));
+// Page 2 of the Drama filter: 5 dramas of 7 shows, 3 per page.
+const RESULTS: ShowsPage = {
+  items: [show(6), show(7)],
+  page: 2,
+  totalPages: 2,
+  total: 5,
+  pageSize: 3,
+  genres: [
+    { name: 'Drama', count: 5 },
+    { name: 'Comedy', count: 2 },
+  ],
+  totalAll: 7,
+};
 
-const renderResults = (): RenderHookResult<ReturnType<typeof useResults>, unknown> =>
-  renderHook(() => useResults({ term: 'murder', shows: SHOWS }));
+type Rendered = RenderHookResult<ReturnType<typeof useResults>, ResultsProps>;
 
-const clickChip = (chips: { label: string; onClick?: () => void }[], label: string): void =>
-  act(() => chips.find((chip) => chip.label === label)?.onClick?.());
+const renderResults = (overrides: Partial<ResultsProps> = {}): Rendered =>
+  renderHook((props) => useResults(props), {
+    initialProps: {
+      term: 'murder',
+      results: RESULTS,
+      genre: 'Drama',
+      onGenreChange: vi.fn(),
+      onPageChange: vi.fn(),
+      ...overrides,
+    },
+  });
 
 describe('useResults', () => {
-  it('shows the first page and the total count', () => {
+  it('words the page the server sent', () => {
     const { result } = renderResults();
 
-    expect(result.current.title).toBe('7 shows for “murder”');
-    expect(result.current.visibleShows.map((item) => item.id)).toEqual([1, 2, 3]);
-    expect(result.current).toMatchObject({ page: 1, totalPages: 3 });
+    expect(result.current).toMatchObject({
+      title: '5 shows for “murder”',
+      page: 2,
+      totalPages: 2,
+      pageCaption: 'Showing 4–5 of 5',
+    });
+    expect(result.current.shows.map((item) => item.id)).toEqual([6, 7]);
   });
 
-  it('filters by genre and goes back to the first page', () => {
-    const { result } = renderResults();
+  it('builds chips from the server genres, "All" counts the whole search', () => {
+    const onGenreChange = vi.fn();
+    const { result } = renderResults({ onGenreChange });
 
-    act(() => result.current.onPageChange(3));
-    clickChip(result.current.chips, 'Comedy');
+    expect(result.current.hasGenres).toBe(true);
+    expect(
+      result.current.chips.map(({ label, count, isActive }) => [label, count, isActive]),
+    ).toEqual([
+      ['All', 7, false],
+      ['Drama', 5, true],
+      ['Comedy', 2, false],
+    ]);
 
-    expect(result.current.title).toBe('2 shows for “murder”');
-    expect(result.current.visibleShows.map((item) => item.id)).toEqual([1, 2]);
-    expect(result.current).toMatchObject({ page: 1, totalPages: 1 });
+    act(() => result.current.chips.find((chip) => chip.label === 'Comedy')?.onClick?.());
+    expect(onGenreChange).toHaveBeenCalledWith('Comedy');
   });
 
-  it('moves focus to the heading on a page change and keeps the handler stable', () => {
-    const { result, rerender } = renderResults();
+  it('has no chips when the search has no genres', () => {
+    const { result } = renderResults({ results: { ...RESULTS, genres: [] } });
+
+    expect(result.current).toMatchObject({ hasGenres: false, chips: [] });
+  });
+
+  it('asks for the page, moves focus to the heading and keeps the handler stable', () => {
+    const props: ResultsProps = {
+      term: 'murder',
+      results: RESULTS,
+      genre: 'Drama',
+      onGenreChange: vi.fn(),
+      onPageChange: vi.fn(),
+    };
+    const { result, rerender } = renderResults(props);
     const focus = vi.fn();
     result.current.headingRef.current = { focus } as unknown as HTMLHeadingElement;
-    const { onPageChange } = result.current;
+    const handler = result.current.onPageChange;
 
-    act(() => onPageChange(2));
-    rerender();
+    act(() => handler(1));
+    rerender({ ...props, results: { ...RESULTS, page: 1 } });
 
+    const { onPageChange } = props;
+
+    expect(onPageChange).toHaveBeenCalledWith(1);
     expect(focus).toHaveBeenCalledOnce();
-    expect(result.current.page).toBe(2);
-    expect(result.current.onPageChange).toBe(onPageChange);
-  });
-
-  it('drops the filter on a second click on the active genre', () => {
-    const { result } = renderResults();
-
-    clickChip(result.current.chips, 'Comedy');
-    clickChip(result.current.chips, 'Comedy');
-
-    expect(result.current.totalPages).toBe(3);
+    expect(result.current.onPageChange).toBe(handler);
   });
 });
 

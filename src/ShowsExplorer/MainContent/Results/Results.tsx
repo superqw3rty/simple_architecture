@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { Show } from '@/types/show';
+import type { ShowsPage } from '@/types/show';
 import { Pagination } from '@/components/Pagination';
 import styles from './Results.module.scss';
 import { useResults } from './logic/useResults';
@@ -8,7 +8,10 @@ import { ShowList } from './ShowList';
 
 export interface ResultsProps {
   term: string;
-  shows: Show[];
+  results: ShowsPage;
+  genre: string | null;
+  onGenreChange: (genre: string | null) => void;
+  onPageChange: (page: number) => void;
 }
 
 export const Results: FC<ResultsProps> = (props) => {
@@ -17,7 +20,7 @@ export const Results: FC<ResultsProps> = (props) => {
     headingRef,
     hasGenres,
     chips,
-    visibleShows,
+    shows,
     page,
     totalPages,
     pageCaption,
@@ -33,7 +36,7 @@ export const Results: FC<ResultsProps> = (props) => {
         {hasGenres && <p className={styles.hint}>Pick a genre to narrow it down</p>}
       </div>
       {hasGenres && <GenreChips chips={chips} />}
-      <ShowList shows={visibleShows} />
+      <ShowList shows={shows} />
       <Pagination
         page={page}
         totalPages={totalPages}

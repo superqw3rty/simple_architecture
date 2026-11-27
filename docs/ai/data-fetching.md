@@ -6,7 +6,7 @@
 
 1. **Функция эндпоинта** в `src/api/<resource>/<name>/` принимает `signal` и возвращает доменную модель (`api-layer.md`).
 2. **Фабрика запросов** `src/api/<resource>/<entity>Queries/` — единственное место, где собираются `queryKey`, `queryFn` (с пробросом `signal`), `enabled` и `staleTime` через `queryOptions()`.
-3. **Фичевый хук** в `logic/hooks/` компонента вызывает `useQuery(showQueries.search(term))`. Презентер переводит результат в флаги для view; view про запросы не знает.
+3. **Фичевый хук** в `logic/hooks/` компонента вызывает `useQuery(showQueries.page(params))`. Презентер переводит результат в флаги для view; view про запросы не знает.
 
 ```ts
 // src/ShowsExplorer/useShowsExplorer.ts — debounce до ключа, рядом с решением о раскладке (D-36);
@@ -15,22 +15,25 @@ const trimmed = query.trim();
 const debounced = useDebouncedValue(trimmed, trimmed ? SEARCH_DEBOUNCE_MS : 0);
 const term = trimmed ? debounced : '';
 
-// src/ShowsExplorer/MainContent/useShowsSearch.ts
+// src/ShowsExplorer/MainContent/logic/hooks/useShowsSearch.ts
 export function useShowsSearch(term: string): UseShowsSearchResult {
-  const search = useQuery(showQueries.search(term));
+  const [state, setState] = useState<ShowsPageParams>({ term, ...FIRST_PAGE });
+  // Новый term начинает со всех жанров и первой страницы — при рендере, не в эффекте.
+  const params = state.term === term ? state : { term, ...FIRST_PAGE };
+  const search = useQuery(showQueries.page(params));
 
-  return { shows: search.data ?? NO_SHOWS, isLoading: search.isLoading /* … */ };
+  return { results: search.data ?? null, isLoading: search.isLoading /* … */ };
 }
 ```
 
-✅ `useQuery(showQueries.search(term))`
-❌ `useQuery({ queryKey: ['shows', term], queryFn: () => searchShows(term) })` — ключ собран руками, `signal` потерян, отмена не работает.
+✅ `useQuery(showQueries.page({ term, genre, page }))`
+❌ `useQuery({ queryKey: ['shows', term], queryFn: () => fetchShowsPage({ term, genre, page }) })` — ключ собран руками, `signal` потерян, отмена не работает.
 
 **Почему фабрика:** ключ и функция запроса всегда меняются вместе. Если их собирает каждая фича, рано или поздно ключ разойдётся с параметрами (чужие данные из кэша) или забудется `signal`.
 
 ## Ключи
 
-- Иерархия `[сущность, действие, ...параметры]`: `['shows', 'search', 'batman']`. Уровни отдаются методами фабрики: `showQueries.all()`, `showQueries.searches()`.
+- Иерархия `[сущность, действие, ...параметры]`: `['shows', 'page', { term, genre, page }]`. Уровни отдаются методами фабрики: `showQueries.all()`, `showQueries.pages()`.
 - Всё, от чего зависит ответ, — в ключе. Пагинация и жанр считаются на сервере (D-58), поэтому они в ключе: `['shows', 'page', { term, genre, page }]`. То, что не влияет на ответ (открыт ли диалог, текст поля до debounce), — не в ключе.
 - Инвалидация — по префиксу из фабрики: `queryClient.invalidateQueries({ queryKey: showQueries.all() })`.
 
