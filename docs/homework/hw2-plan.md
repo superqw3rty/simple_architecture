@@ -183,9 +183,9 @@ src/tasks/toggleFavorite/                 # общие таски (как src/co
 - Валидация `q`/`page`/`genre` в роуте: 400 при пустом `q`, нормализация `page`.
 
 ### Шаг 6. Фронт на свой API (без нового UI)
-- `src/api/http.ts`: `method`, JSON `body`, базовый URL из `import.meta.env.VITE_API_URL ?? ''`.
+- `src/api/core/http/`: `method`, JSON `body`, базовый URL из `import.meta.env.VITE_API_URL ?? ''`.
 - `src/api/tvmaze/` → `src/api/shows/` (`fetchShowsPage`, `showQueries.page({ term, genre, page })` с `placeholderData: keepPreviousData`). Удалить с фронта `mapShow`, `stripHtml`, `types/api/tvmaze`, `utils/paginate`, `filterByGenre`, `countGenres` вместе с тестами (тесты уехали на сервер).
-- `src/api/queryClient.ts`: `export const queryClient = createQueryClient()`, `QueryProvider` использует синглтон.
+- `src/api/core/queryClient/`: `export const queryClient = createQueryClient()`, `QueryProvider` использует синглтон.
 - Состояние `genre`/`page` поднимается туда, где делается запрос (`MainContent/logic/`), при смене `term` сбрасывается. `Results` получает готовые `items`, `chips`, `page`, `totalPages`. `getGenreChips` строит чипсы из `genres` сервера.
 
 ### Шаг 7. Backend: избранное по ID браузера
@@ -201,8 +201,8 @@ src/tasks/toggleFavorite/                 # общие таски (как src/co
 - `ShowCard` нужна обеим страницам, поэтому переезжает в `src/components/ShowCard/` (правило переиспользования, D-42).
 
 ### Шаг 9. Фронт: избранное (по макету)
-- `src/api/clientId.ts`: `getClientId()` создаёт `crypto.randomUUID()` один раз и хранит его в `localStorage`. `http.ts` добавляет заголовок ко всем запросам `/api`.
-- `src/api/favorites/` (`addFavorite`, `removeFavorite`, `favoriteQueries.list()`).
+- `src/api/core/clientId/`: `getClientId()` создаёт `crypto.randomUUID()` один раз и хранит его в `localStorage`. `request()` добавляет заголовок ко всем запросам `/api`.
+- `src/api/favorites/` — папка на модуль (D-68): `addFavorite/`, `removeFavorite/`, `fetchFavorites/`, `favoriteQueries/` (`favoriteQueries.list()`).
 - **Таска** `src/tasks/toggleFavorite/toggleFavorite.ts` (общая: звезда в выдаче и на странице избранного). Вызывает API, затем `queryClient.invalidateQueries` для `showQueries.all()` и `favoriteQueries.all()`, возвращает `{ isFavorite }`. Тест с замоканным `@/api`.
 - `src/components/FavoriteToggle/`: звезда (`StarIcon`), `aria-pressed`, презентер `logic/useFavoriteToggle.ts` с локальным `isPending` и вызовом таски, по результату — `showToast(...)`.
 - Toast: свой стор `src/stores/toasts/` (модульный синглтон + `subscribe`, по лекции это Entity) и хук `@/hooks/useToasts` (`useSyncExternalStore`). Компонент `src/components/Toaster/` с `role="status"` и автоскрытием.

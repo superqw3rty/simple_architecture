@@ -4,8 +4,8 @@
 
 ## Из чего состоит запрос
 
-1. **Функция эндпоинта** в `src/api/<service>/` принимает `signal` и возвращает доменную модель (`api-layer.md`).
-2. **Фабрика запросов** `src/api/<service>/<entity>Queries.ts` — единственное место, где собираются `queryKey`, `queryFn` (с пробросом `signal`), `enabled` и `staleTime` через `queryOptions()`.
+1. **Функция эндпоинта** в `src/api/<resource>/<name>/` принимает `signal` и возвращает доменную модель (`api-layer.md`).
+2. **Фабрика запросов** `src/api/<resource>/<entity>Queries/` — единственное место, где собираются `queryKey`, `queryFn` (с пробросом `signal`), `enabled` и `staleTime` через `queryOptions()`.
 3. **Фичевый хук** в `logic/hooks/` компонента вызывает `useQuery(showQueries.search(term))`. Презентер переводит результат в флаги для view; view про запросы не знает.
 
 ```ts
@@ -54,7 +54,7 @@ export function useShowsSearch(term: string): UseShowsSearchResult {
 
 ## Клиент
 
-`createQueryClient()` в `src/api/queryClient.ts` создаёт **один модульный синглтон** `export const queryClient`, его же отдаёт `src/QueryProvider` (D-56). Синглтон нужен таскам: они импортируют кеш напрямую, как стор (`tasks.md`). В тестах — `queryClient.clear()` в `beforeEach`.
+`createQueryClient()` в `src/api/core/queryClient/` создаёт **один модульный синглтон** `export const queryClient`, его же отдаёт `src/QueryProvider` (D-56). Синглтон нужен таскам: они импортируют кеш напрямую, как стор (`tasks.md`). В тестах — `queryClient.clear()` в `beforeEach`.
 
 - Повторы: сетевая ошибка и 5xx — до 2 повторов с backoff, 4xx — без повторов (`shouldRetry`).
 - `refetchOnWindowFocus: false`. `staleTime` задаётся в фабрике для каждого запроса (поиск — 5 минут).
