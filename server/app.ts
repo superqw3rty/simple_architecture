@@ -1,19 +1,22 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { shows } from './routes/shows/index.ts';
+import { handleError } from './routes/utils/handleError/index.ts';
 
 export const app = new Hono().basePath('/api');
 
 app.use(
   '/*',
   cors({
-    origin:
-      process.env.NODE_ENV === 'development' ? 'http://localhost:5173/' : 'http://example.com',
-    allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
-    allowMethods: ['POST', 'GET', 'OPTIONS'],
-    exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+    allowHeaders: ['Content-Type', 'X-Client-Id'],
+    allowMethods: ['GET', 'PUT', 'DELETE'],
     maxAge: 600,
-    credentials: true,
   }),
 );
 
+app.onError(handleError);
+
 app.get('/health', (c) => c.json({ ok: true }));
+
+app.route('/shows', shows);
