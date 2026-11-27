@@ -12,15 +12,18 @@ interface MainContentProps {
 export const MainContent: FC<MainContentProps> = ({ term }) => {
   const {
     mainRef,
-    shows,
+    results,
+    genre,
     isIdle,
     isLoading,
+    isBusy,
     hasError,
     isEmpty,
     emptyTitle,
-    hasResults,
     announcement,
     onRetry,
+    onGenreChange,
+    onPageChange,
   } = useMainContent(term);
 
   return (
@@ -35,7 +38,7 @@ export const MainContent: FC<MainContentProps> = ({ term }) => {
           ref={mainRef}
           tabIndex={-1}
           className={`container ${styles.mainContent}`}
-          aria-busy={isLoading}
+          aria-busy={isBusy}
         >
           {hasError && (
             <div className={styles.status}>
@@ -55,7 +58,15 @@ export const MainContent: FC<MainContentProps> = ({ term }) => {
             </div>
           )}
 
-          {hasResults && <Results key={term} term={term} shows={shows} />}
+          {results && (
+            <Results
+              term={term}
+              results={results}
+              genre={genre}
+              onGenreChange={onGenreChange}
+              onPageChange={onPageChange}
+            />
+          )}
         </main>
       )}
     </>
