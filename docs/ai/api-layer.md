@@ -2,7 +2,7 @@
 
 Всё общение фронта с сервером живёт в `src/api/`. Слой ничего не знает о React, компонентах и тасках — это обычные асинхронные функции, которые можно вызвать из теста, таски или Node. Это и есть «абстракция сети» из лекции: таска вызывает `addFavorite(id)` и не знает, HTTP там или сокет.
 
-**Целевая схема (ДЗ-2, D-58):** фронт ходит только в **свой** backend (`/api`). TVmaze, его DTO и маппер переезжают на сервер (`backend.md`). До шага 6 `docs/homework/hw2-plan.md` в коде ещё живёт `src/api/tvmaze/` — примеры ниже описывают его.
+Фронт ходит только в **свой** backend (`/api`, D-58). TVmaze, его DTO и маппер живут на сервере (`backend.md`): фронт получает готовую модель и ничего не маппит.
 
 ## Структура: папка на модуль (D-68)
 
@@ -20,7 +20,7 @@ src/api/
     showQueries/            # фабрика запросов ресурса
     index.ts                # наружу: эндпоинты и фабрика ресурса
   favorites/                # шаг 9: addFavorite/, removeFavorite/, fetchFavorites/, favoriteQueries/, index.ts
-shared/                     # типы ответов нашего API, общие с сервером
+shared/                     # контракт API: типы ответов, общие с сервером (#shared)
 ```
 
 - **Модуль = папка** `<name>/` с `<name>.ts`, `<name>.test.ts` и `index.ts` (только реэкспорт). Других файлов и подпапок в ней нет. Так же устроен сервер (D-65…D-67).
@@ -30,60 +30,53 @@ shared/                     # типы ответов нашего API, общи
 
 **Почему:** решение пользователя — плоский `src/api/` с тестами рядом стал нечитаемым. Папка — граница модуля: файл, тест и вход вместе, в свёрнутом дереве видны только имена.
 
-`src/api/tvmaze/` — старый клиент, лежит плоско и импортируется как `@/api/tvmaze` до шага 6.4 `docs/homework/hw2-plan.md`, потом удаляется. Его DTO — `src/types/api/tvmaze.ts`.
-
-Типы ответов (DTO) описывают ответ **полностью и честно**: все поля, которые отдаёт сервер, с `| null` везде, где сервер может вернуть `null`. Проверяй форму на реальном ответе, а не по догадке. Имена типов — с префиксом сервиса (`TvMaze*`), чтобы не путать с доменными.
-
 ## Правила
 
 1. **`fetch` только в `core/http`.** В остальном `src/` он запрещён ESLint-правилом. Заголовки, базовая обработка ошибок, будущая авторизация — всё в одном месте.
-2. **Каждая функция эндпоинта принимает `signal`** последним аргументом и пробрасывает его в `request` — без этого не работает отмена.
-3. **Наружу — только доменные модели.** Типы из `@/types/api` используются только внутри `src/api` и не попадают в хуки и компоненты (ESLint, D-52). Сервер переименовал поле — меняется один маппер.
-4. **Маппер терпим к данным**: любое поле может прийти `null` или отсутствовать. Маппер подставляет значения по умолчанию (`genres ?? []`, `image?.medium ?? null`), чистит HTML (`stripHtml`), приводит форматы (год из даты).
+2. **Эндпоинт передаёт путь** (`'/api/shows'`), а `request()` ставит перед ним `API_URL`. Локально он пустой, и Vite проксирует `/api` на `pnpm dev:server`. Абсолютные URL уходят как есть.
+3. **Каждая функция эндпоинта принимает `signal`** последним аргументом и пробрасывает его в `request` — без этого не работает отмена.
+4. **Тип ответа — из контракта `#shared`** (`ShowsPage`, `FavoritesList`), маппинга на фронте нет. Компоненты берут те же типы через `@/types/show`. Изменился ответ — меняется `shared/`, и `tsc` покажет оба конца.
 5. **Ошибки — всегда `ApiError`** с понятным пользователю `message` и `status`. `AbortError` пробрасывается как есть — TanStack Query распознаёт отмену сам.
 6. **Чтение из React — только через фабрику запросов** и `useQuery` в хуке (см. `data-fetching.md`). **Запись — только из таски** (`tasks.md`, D-56). View, презентеры напрямую и чистые функции API не вызывают.
-7. **API-слой не импортирует** `react`, компоненты, хуки, таски, сторы. Из `@tanstack/react-query` — только `QueryClient` и `queryOptions` (обычные функции без React). Зависимость направлена только внутрь: `hooks → api → types`. Проверяет ESLint.
-8. URL и параметры не склеиваются руками — параметры передаются в `request(url, { params })`.
-9. **Фабрика запросов** `<entity>Queries/` — объект с методами: уровни ключа (`all()`, `searches()`) и `queryOptions` на каждый эндпоинт. `queryFn` пробрасывает `signal` из контекста запроса.
+7. **API-слой не импортирует** `react`, компоненты, хуки, таски, сторы. Из `@tanstack/react-query` — только `QueryClient` и `queryOptions` (обычные функции без React; `keepPreviousData` тоже нельзя). Зависимость направлена только внутрь: `hooks → api → types`. Проверяет ESLint.
+8. URL и параметры не склеиваются руками — параметры передаются в `request(url, { params })`; `undefined` в URL не попадает.
+9. **Фабрика запросов** `<entity>Queries/` — объект с методами: уровни ключа (`all()`, `pages()`) и `queryOptions` на каждый эндпоинт. `queryFn` пробрасывает `signal` из контекста запроса.
 
 ## Пример эндпоинта и фабрики
 
 ```ts
-// src/api/tvmaze/searchShows.ts
-import type { TvMazeSearchResponse } from '@/types/api/tvmaze';
-import type { Show } from '@/types/show';
-import { request } from '../http';
-import { BASE_URL } from './config';
-import { mapShow } from './mapShow';
-
-export async function searchShows(query: string, signal?: AbortSignal): Promise<Show[]> {
-  const results = await request<TvMazeSearchResponse>(`${BASE_URL}/search/shows`, {
-    params: { q: query },
-    signal,
-  });
-
-  return results.map((result) => mapShow(result.show));
+// src/api/shows/fetchShowsPage/fetchShowsPage.ts (без JSDoc)
+export interface ShowsPageParams {
+  term: string;
+  genre: string | null;
+  page: number;
 }
 
-// src/api/tvmaze/showQueries.ts (без JSDoc)
-const SEARCH_STALE_TIME = 5 * 60_000;
+export function fetchShowsPage(
+  { term, genre, page }: ShowsPageParams,
+  signal?: AbortSignal,
+): Promise<ShowsPage> {
+  return request<ShowsPage>('/api/shows', {
+    params: { q: term, genre: genre ?? undefined, page },
+    signal,
+  });
+}
 
-type ShowsKey = readonly ['shows'];
-type ShowsSearchesKey = readonly [...ShowsKey, 'search'];
-type ShowsSearchKey = readonly [...ShowsSearchesKey, string];
-type ShowsSearchOptions = ReturnType<typeof queryOptions<Show[], Error, Show[], ShowsSearchKey>>;
-
+// src/api/shows/showQueries/showQueries.ts (без JSDoc и типов ключей)
 export const showQueries = {
   all: (): ShowsKey => ['shows'] as const,
 
-  searches: (): ShowsSearchesKey => [...showQueries.all(), 'search'] as const,
+  pages: (): ShowsPagesKey => [...showQueries.all(), 'page'] as const,
 
-  search: (term: string): ShowsSearchOptions =>
+  page: ({ term, genre, page }: ShowsPageParams): ShowsPageOptions =>
     queryOptions({
-      queryKey: [...showQueries.searches(), term] as const,
-      queryFn: ({ signal }) => searchShows(term, signal),
+      queryKey: [...showQueries.pages(), { term, genre, page }] as const,
+      queryFn: ({ signal }) => fetchShowsPage({ term, genre, page }, signal),
       enabled: term.length > 0,
-      staleTime: SEARCH_STALE_TIME,
+      staleTime: PAGE_STALE_TIME,
+      // Прошлая страница того же term остаётся на экране, пока грузится следующая.
+      placeholderData: (previous, previousQuery) =>
+        previousQuery?.queryKey[2].term === term ? previous : undefined,
     }),
 };
 ```
@@ -96,10 +89,11 @@ export const showQueries = {
 
 ## Тесты
 
-- Мапперы — обязательные юнит-тесты, включая «дырявый» DTO.
-- Функции эндпоинтов тестируются с `vi.stubGlobal('fetch', ...)`: правильный URL и параметры, маппинг ответа.
-- Фабрики запросов: форма ключа, `enabled` и — через `new QueryClient().fetchQuery(...)` — что `signal` дошёл до `fetch`.
+- Функции эндпоинтов тестируются с `vi.stubGlobal('fetch', ...)`: правильный путь и параметры, `signal`, ответ как есть, ошибка → `ApiError`.
+- Фабрики запросов: форма ключа, `enabled`, `placeholderData` и — через `new QueryClient().fetchQuery(...)` — что `signal` дошёл до `fetch`.
+- Как TanStack Query применяет опции фабрики (placeholder при листании, сброс при новом `term`), проверяет тест фичевого хука через `renderHook` (`useShowsSearch.test.ts`): в `src/api` React и `QueryObserver` запрещены.
+- Мапперы и «дырявые» DTO — на сервере (`backend.md`).
 
 ## Рантайм-валидация
 
-Схемы (zod и т.п.) пока не используем: API публичный и стабильный, маппер защищён от `null`. Вернуться к вопросу, если появятся ответы сложной формы или недоверенные источники — решение фиксируется в `decisions.md`.
+Схемы (zod и т.п.) пока не используем: ответ приходит от нашего же сервера, типы общие через `shared/`. Вернуться к вопросу, если появятся ответы сложной формы или недоверенные источники — решение фиксируется в `decisions.md`.

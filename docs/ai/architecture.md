@@ -71,25 +71,21 @@ export const GenreChips: FC<Props> = ({ shows, selected, onChange }) => {
 - Принимает пропсы компонента, возвращает плоский объект «всё, что нужно JSX»: готовые значения, флаги `is*`/`has*`, обработчики `on*`, `ref` для управления фокусом.
 - Отдаёт данные **в форме, удобной view**: не `shows` + `page`, а `visibleShows`; не `status`, а `isLoading`, `isEmpty`, `hasError`.
 - Не возвращает JSX и не импортирует компоненты и стили. Типы пропсов своего и дочерних компонентов импортирует через `import type` (D-50).
-- Не делает всё сам: презентер — это «оглавление». Куски логики выносятся в хуки (`logic/hooks/useGenreFilter.ts`), чистые функции (`logic/utils/formatPageRange.ts`) и таски (`logic/tasks/`, `@/tasks`). Презентер их только соединяет.
+- Не делает всё сам: презентер — это «оглавление». Куски логики выносятся в хуки (`logic/hooks/useShowsSearch.ts`), чистые функции (`logic/utils/formatPageRange.ts`) и таски (`logic/tasks/`, `@/tasks`). Презентер их только соединяет.
 - Знает, **на какое событие какую таску вызвать**, держит состояние вызова (`isPending`, ошибка) в своём `useState` и решает, что показать после: toast, переход на другую страницу (`tasks.md`, `routing.md`).
 - Бизнес-правила (что считается избранным, как фильтровать, как кешировать) в презентере не пишутся: им место в таске, а для серверных данных — на backend (D-54).
 
 ```ts
 // ✅ src/ShowsExplorer/MainContent/Results/logic/useResults.ts — читается как оглавление
-// (paginate уходит на сервер в шаге 6 hw2-plan)
-export function useResults({ term, shows }: ResultsProps): UseResultsResult {
-  const [page, setPage] = useState(1);
+export function useResults({ term, results, genre, onGenreChange, onPageChange }: ResultsProps): UseResultsResult {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const genres = useGenreFilter(shows, () => setPage(1));
-  const total = genres.filteredShows.length;
-  const paged = paginate(genres.filteredShows, page, PAGE_SIZE);
-  // …onPageChange
+  const chips = getGenreChips(results.genres, results.totalAll, genre, onGenreChange);
+  // …changePage: onPageChange + фокус на заголовок
   return {
-    title: formatResultsTitle(total, term),
-    hasGenres: genres.chips.length > 0,
-    visibleShows: paged.items,
-    pageCaption: formatPageRange(paged.page, PAGE_SIZE, total),
+    title: formatResultsTitle(results.total, term),
+    hasGenres: chips.length > 0,
+    shows: results.items,
+    pageCaption: formatPageRange(results.page, results.pageSize, results.total),
     // …
   };
 }
