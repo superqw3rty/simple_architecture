@@ -49,9 +49,8 @@ const NO_MUTATION = {
 };
 
 // D-68: outside src/api everything comes from '@/api'; its index.ts decides what is public.
-// '@/api/tvmaze' is the old flat client, allowed until step 6.4 of docs/homework/hw2-plan.md deletes it.
 const API_INTERNALS = {
-  group: ['@/api/*', '!@/api/tvmaze'],
+  group: ['@/api/*'],
   message: "Import from '@/api', not from its folders (docs/ai/api-layer.md, D-68).",
 };
 

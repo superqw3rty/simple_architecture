@@ -365,9 +365,7 @@ function checkUnitFolders(dir, kind, looseFileMessage, rule, allowedFiles = []) 
 
 // src/api: only index.ts, core/ and resource folders at the root. core/ holds module folders,
 // a resource holds module folders and its index.ts (D-68, docs/ai/api-layer.md).
-// tvmaze/ is the old flat client, deleted in step 6.4 of docs/homework/hw2-plan.md.
 const API = join(SRC, 'api');
-const API_LEGACY = new Set(['tvmaze']);
 const API_LOOSE_FILE =
   'a module lives in its own folder: core/name/name.ts or resource/name/name.ts';
 
@@ -380,7 +378,7 @@ function checkApiLayout() {
       }
     } else if (entry.name === 'core') {
       checkUnitFolders(path, 'module', API_LOOSE_FILE, 'D-68');
-    } else if (!API_LEGACY.has(entry.name)) {
+    } else {
       checkUnitFolders(path, 'module', API_LOOSE_FILE, 'D-68', ['index.ts']);
       if (!existsSync(join(path, 'index.ts'))) {
         report(path, 'a resource needs index.ts that re-exports its modules (D-68)');
