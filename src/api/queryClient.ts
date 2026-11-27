@@ -30,3 +30,10 @@ export function createQueryClient(): QueryClient {
     },
   });
 }
+
+/**
+ * The app's one query cache (D-56). QueryProvider hands it to React, and tasks import it
+ * directly, like a store, to invalidate or update data after a change.
+ * Tests that share it call `queryClient.clear()` in `beforeEach`.
+ */
+export const queryClient = createQueryClient();

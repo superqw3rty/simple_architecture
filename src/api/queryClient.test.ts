@@ -1,6 +1,21 @@
+import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from './ApiError';
-import { shouldRetry } from './queryClient';
+import { createQueryClient, queryClient, shouldRetry } from './queryClient';
+
+describe('queryClient', () => {
+  it('is a single QueryClient with the app-wide defaults', () => {
+    expect(queryClient).toBeInstanceOf(QueryClient);
+    expect(queryClient.getDefaultOptions().queries).toMatchObject({
+      retry: shouldRetry,
+      refetchOnWindowFocus: false,
+    });
+  });
+
+  it('is not rebuilt: createQueryClient makes a separate client', () => {
+    expect(createQueryClient()).not.toBe(queryClient);
+  });
+});
 
 describe('shouldRetry', () => {
   it('retries network and server failures up to two times', () => {
