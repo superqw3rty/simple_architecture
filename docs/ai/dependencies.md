@@ -29,7 +29,7 @@
 | Пакет | Зачем | Альтернативы | Как заменить |
 |---|---|---|---|
 | `react`, `react-dom` | UI | — | — |
-| `@tanstack/react-query` | кэш, отмена, дедупликация и повторы запросов (D-22) | свой `useRequest` (был до D-22), SWR | импортируется только в `src/api/queryClient.ts`, фабриках `*Queries.ts`, `QueryProvider` и фичевых хуках |
+| `@tanstack/react-query` | кэш, отмена, дедупликация и повторы запросов (D-22) | свой `useRequest` (был до D-22), SWR | импортируется только в `src/api/core/queryClient/`, фабриках `*Queries/`, `QueryProvider` и фичевых хуках |
 | `hono`, `@hono/node-server` | HTTP-сервер backend (D-58) | `node:http` (свой роутер, CORS, парсинг), Fastify (избыточен), Express (устарел) | только `server/main.ts`, `server/app.ts`, `server/routes/` (ESLint, блок 8) |
 
 ### Dev

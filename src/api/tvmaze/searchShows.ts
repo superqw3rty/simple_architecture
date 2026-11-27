@@ -1,6 +1,6 @@
 import type { TvMazeSearchResponse } from '@/types/api/tvmaze';
 import type { Show } from '@/types/show';
-import { request } from '../http';
+import { request } from '../core/http';
 import { BASE_URL } from './config';
 import { mapShow } from './mapShow';
 

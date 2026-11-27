@@ -1,13 +1,11 @@
-import { useState } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
-import { createQueryClient } from '@/api/queryClient';
+import { queryClient } from '@/api';
 
 interface UseQueryProviderResult {
   client: QueryClient;
 }
 
+// The singleton, not a client per mount: tasks update this same cache (D-56).
 export function useQueryProvider(): UseQueryProviderResult {
-  const [client] = useState(createQueryClient);
-
-  return { client };
+  return { client: queryClient };
 }

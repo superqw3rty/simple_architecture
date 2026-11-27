@@ -1,6 +1,6 @@
 // Structural checks of Simple Architecture that ESLint cannot express.
 // Rules: docs/ai/structure.md. Run: pnpm check:arch
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, relative, sep } from 'node:path';
 
 const SRC = 'src';
@@ -316,19 +316,21 @@ function checkSharedFolders() {
 // and an index.ts that re-exports it (D-65, docs/ai/backend.md).
 const SERVER_TASKS = join('server', 'tasks');
 
-function checkUnitFolder(dir, kind) {
+// The same folder shape serves server tasks (D-65) and src/api modules (D-68): `rule` names the decision.
+function checkUnitFolder(dir, kind, rule) {
   const name = basename(dir);
   const entries = readdirSync(dir, { withFileTypes: true });
   const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
   const expected = [`${name}.ts`, `${name}.test.ts`, 'index.ts'];
+  const helperHint = kind === 'module' ? '' : '; a helper goes to utils/<name>/';
 
   for (const file of expected.filter((item) => !files.includes(item))) {
-    report(dir, `${kind} folder needs ${file} (D-65)`);
+    report(dir, `${kind} folder needs ${file} (${rule})`);
   }
   for (const file of files.filter((item) => !expected.includes(item))) {
     report(
       join(dir, file),
-      `${kind} folder holds only ${expected.join(', ')}; a helper goes to utils/<name>/ (D-65)`,
+      `${kind} folder holds only ${expected.join(', ')}${helperHint} (${rule})`,
     );
   }
   if (files.includes('index.ts')) {
@@ -338,32 +340,64 @@ function checkUnitFolder(dir, kind) {
   for (const sub of entries.filter((entry) => entry.isDirectory())) {
     const path = join(dir, sub.name);
     if (kind === 'task' && sub.name === 'utils') {
-      checkUnitFolders(path, 'util', 'a util lives in its own folder: utils/name/name.ts (D-65)');
+      checkUnitFolders(path, 'util', 'a util lives in its own folder: utils/name/name.ts', rule);
     } else {
       report(
         path,
         kind === 'task'
-          ? 'a task folder holds only utils/ (D-65)'
-          : 'a util folder has no subfolders (D-65)',
+          ? `a task folder holds only utils/ (${rule})`
+          : `a ${kind} folder has no subfolders (${rule})`,
       );
     }
   }
 }
 
-function checkUnitFolders(dir, kind, looseFileMessage) {
+function checkUnitFolders(dir, kind, looseFileMessage, rule, allowedFiles = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      checkUnitFolder(path, kind);
-    } else {
-      report(path, looseFileMessage);
+      checkUnitFolder(path, kind, rule);
+    } else if (!allowedFiles.includes(entry.name)) {
+      report(path, `${looseFileMessage} (${rule})`);
+    }
+  }
+}
+
+// src/api: only index.ts, core/ and resource folders at the root. core/ holds module folders,
+// a resource holds module folders and its index.ts (D-68, docs/ai/api-layer.md).
+// tvmaze/ is the old flat client, deleted in step 6.4 of docs/homework/hw2-plan.md.
+const API = join(SRC, 'api');
+const API_LEGACY = new Set(['tvmaze']);
+const API_LOOSE_FILE =
+  'a module lives in its own folder: core/name/name.ts or resource/name/name.ts';
+
+function checkApiLayout() {
+  for (const entry of readdirSync(API, { withFileTypes: true })) {
+    const path = join(API, entry.name);
+    if (!entry.isDirectory()) {
+      if (entry.name !== 'index.ts') {
+        report(path, 'src/api holds only index.ts, core/ and resource folders (D-68)');
+      }
+    } else if (entry.name === 'core') {
+      checkUnitFolders(path, 'module', API_LOOSE_FILE, 'D-68');
+    } else if (!API_LEGACY.has(entry.name)) {
+      checkUnitFolders(path, 'module', API_LOOSE_FILE, 'D-68', ['index.ts']);
+      if (!existsSync(join(path, 'index.ts'))) {
+        report(path, 'a resource needs index.ts that re-exports its modules (D-68)');
+      }
     }
   }
 }
 
 walk(SRC);
 checkSharedFolders();
-checkUnitFolders(SERVER_TASKS, 'task', 'a task lives in its own folder: tasks/name/name.ts (D-65)');
+checkUnitFolders(
+  SERVER_TASKS,
+  'task',
+  'a task lives in its own folder: tasks/name/name.ts',
+  'D-65',
+);
+checkApiLayout();
 checkTokenGrid();
 checkSharedHooks(join(SRC, 'hooks'));
 

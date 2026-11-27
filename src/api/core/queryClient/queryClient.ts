@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { ApiError } from './ApiError';
+import { ApiError } from '../ApiError';
 
 /** Retries after the first failure. Total attempts = MAX_RETRIES + 1. */
 const MAX_RETRIES = 2;
@@ -30,3 +30,10 @@ export function createQueryClient(): QueryClient {
     },
   });
 }
+
+/**
+ * The app's one query cache (D-56). QueryProvider hands it to React, and tasks import it
+ * directly, like a store, to invalidate or update data after a change.
+ * Tests that share it call `queryClient.clear()` in `beforeEach`.
+ */
+export const queryClient = createQueryClient();

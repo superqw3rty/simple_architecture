@@ -19,9 +19,10 @@ describe('searchShows', () => {
 
     await searchShows('kill bill', signal);
 
-    expect(mock).toHaveBeenCalledWith('https://api.tvmaze.com/search/shows?q=kill+bill', {
-      signal,
-    });
+    expect(mock).toHaveBeenCalledWith(
+      'https://api.tvmaze.com/search/shows?q=kill+bill',
+      expect.objectContaining({ signal }),
+    );
   });
 
   it('returns mapped shows in the order of the response', async () => {

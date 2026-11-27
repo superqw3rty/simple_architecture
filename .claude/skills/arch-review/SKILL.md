@@ -48,7 +48,7 @@ description: Проверить код на соответствие Simple Arch
 
 ### Данные
 - `signal` проброшен до `request`? Всё, от чего зависит ответ, есть в `queryKey`?
-- `useQuery` получает опции только из фабрики `@/api/<service>` (`showQueries.search(term)`), а не собранный руками `queryKey`/`queryFn`? Скелетоны завязаны на `isLoading`, а не на `isPending`?
+- `useQuery` получает опции только из фабрики из `@/api` (`showQueries.page({ term, genre, page })`), а не собранный руками `queryKey`/`queryFn`? Скелетоны завязаны на `isLoading`, а не на `isPending`?
 - В `src/types` нет типов, нужных только одному месту?
 - Модель без UI-строк: подписи («Untitled», «No rating») и тексты ошибок готовит презентер или константы экрана, не маппер и не `error.message` (D-53).
 - Есть UI для всех состояний: начальное, загрузка, ошибка с повтором, пусто?
