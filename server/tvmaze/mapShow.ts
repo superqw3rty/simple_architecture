@@ -1,5 +1,5 @@
 import type { ShowStatus, Show } from '#shared';
-import { stripHtml } from './stripHtml.ts';
+import { stripHtml } from './utils/stripHtml/index.ts';
 import type { TvMazeShow } from './types.ts';
 
 /** "2012-08-26" → 2012. Anything that does not start with a year → null. */

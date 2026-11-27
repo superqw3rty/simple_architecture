@@ -14,7 +14,7 @@ import { getOrLoad } from '../getOrLoad/index.ts'; // соседняя таск�
 
 // ✅ server/tvmaze/mapShow.ts
 import type { Show, ShowStatus } from '#shared';
-import { stripHtml } from './stripHtml.ts'; // рядом — ./
+import { stripHtml } from './utils/stripHtml/index.ts'; // внутри своей папки — ./
 ```
 
 ❌ `import { requestTvMaze } from '@server/tvmaze/request.ts'` — tsc и Node такой модуль не найдут.
@@ -28,7 +28,8 @@ server/
   main.ts                 # запуск: serve(app, PORT)
   app.ts                  # Hono app: cors, clientId-middleware, подключение роутов, обработка ошибок
   routes/                 # транспорт («презентер» сервера): разобрать запрос → вызвать таску → ответ и статус
-    shows.ts  favorites.ts
+    shows/  favorites/    # роут — папка: shows.ts, shows.test.ts, index.ts (D-67)
+    utils/handleError/    # доменная ошибка → HTTP-статус, подключается в app.ts через app.onError
   tasks/                  # бизнес-логика: обычные функции, без Hono (tasks.md); раскладка — ниже (D-65)
     searchShows/          # searchShows.ts + utils/{filterByGenre,countGenres,paginate}/
     getOrLoad/            # механика кеша: свежая запись или load → запомнить (не знает про TVmaze)
@@ -37,7 +38,8 @@ server/
   entities/               # хранилища в памяти (Entity): данные + функции их изменения
     cache.ts              # const cache = new Map<string, CacheEntry>() (D-64)
     favorites.ts          # const favorite: Record<ClientId, Record<ShowId, Show>> = {}
-  tvmaze/                 # клиент внешнего API: request, типы ответа, mapShow, stripHtml
+  tvmaze/                 # клиент внешнего API: request, types, mapShow (D-66)
+    utils/stripHtml/      # внутренние чистые помощники клиента — по папкам, как шаги таски
 shared/                   # контракт API: только типы (Show, ShowsPage, FavoritesList…)
 ```
 
@@ -54,12 +56,16 @@ searchShows.ts  searchShows.test.ts  index.ts
 utils/paginate/  paginate.ts  paginate.test.ts  index.ts
 ```
 
+В `server/tvmaze/` так же (D-66): в корне — то, что берут снаружи (`request`, `mapShow`, `types`, `constants`); внутренний чистый помощник — `tvmaze/utils/<name>/`. Маппер — не утилита: это вход слоя, которым таски переводят DTO в `Show`.
+
+В `server/routes/` тоже (D-67): роут — папка `routes/<name>/` (`<name>.ts`, `<name>.test.ts`, `index.ts`), общий помощник транспорта — `routes/utils/<name>/`. `app.ts` импортирует их через `index.ts`.
+
 ❌ `server/tasks/searchShows/paginate.ts` рядом с таской, ❌ `server/tasks/getOrLoad.ts` файлом в корне `tasks/`. Проверяет `pnpm check:arch`.
 
 Зависимости только вниз: `routes → tasks → entities, tvmaze`. Роут не ходит в `entities` и `tvmaze` напрямую, таска не импортирует Hono и не знает про HTTP-статусы.
 
 ```ts
-// ✅ server/routes/favorites.ts — транспорт тонкий
+// ✅ server/routes/favorites/favorites.ts — транспорт тонкий
 favorites.put('/:id', async (c) => {
   const id = parseShowId(c.req.param('id'));
   if (id === null) {
@@ -76,6 +82,7 @@ favorites.put('/:id', async (c) => {
 - Все ответы JSON, префикс `/api`. Типы ответа описаны в `shared/` и импортируются и сервером, и фронтом (`#shared` и там, и там, D-63). Контракт меняется только вместе с типом в `shared/`.
 - Модель в ответе — доменная (`Show`), без UI-строк (D-53): сырые ответы TVmaze наружу не уходят, их переводит `server/tvmaze/mapShow.ts`.
 - Ошибки: `{ error: string }` со статусом. 400 — неверный запрос (пустой `q`, кривой id, нет `X-Client-Id`), 404 — шоу нет в TVmaze, 502 — TVmaze недоступен. Текст ошибки — для разработчика, пользователю его не показывают.
+- Ошибку в статус переводит только `handleError` (`server/routes/utils/handleError/`, подключён в `app.ts` через `app.onError`): `NotFoundError` → 404, `UpstreamError` → 502, `HTTPException` → его статус, остальное → 500 с общим текстом и `console.error`. Нижние слои бросают доменные ошибки из `server/error.ts` (без Hono), роуты и таски не ловят их ради статуса.
 - Пишущие методы идемпотентны: `PUT /api/favorites/:id` повторно не дублирует, `DELETE` отсутствующего не падает.
 
 ## Кеш (Entity `cache`)
@@ -94,7 +101,7 @@ favorites.put('/:id', async (c) => {
 
 ## CORS и окружение
 
-- `PORT` (по умолчанию 3001), `CORS_ORIGIN` — origin фронта (`https://<user>.github.io`). В `allowHeaders` есть `X-Client-Id`.
+- `PORT` (по умолчанию 3001), `CORS_ORIGIN` — origin фронта (`https://<user>.github.io`; по умолчанию `http://localhost:5173`). Без запасного значения Hono получает `origin: undefined` и падает на каждом запросе. В `allowHeaders` есть `X-Client-Id`.
 - Локально фронт ходит через Vite proxy `/api` → `http://localhost:3001`, CORS не нужен.
 - Скрипты: `pnpm dev` запускает параллельно `dev:client` (Vite) и `dev:server` (`node --watch`); `pnpm start` — сервер без watch (прод). Для preview в `.claude/launch.json` — отдельные конфиги `dev` и `server`.
 - Деплой — `docs/homework/hw2-plan.md`, раздел «Хостинг» (D-60).

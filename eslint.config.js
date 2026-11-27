@@ -76,7 +76,7 @@ export default defineConfig([
 
   // 3. Code style for every file: a block always gets braces, even a one-liner.
   {
-    rules: { curly: ['error', 'all'] },
+    rules: { curly: ['error', 'all'], 'prefer-const': 'error' },
   },
 
   // 4. Simple Architecture rules for application code.

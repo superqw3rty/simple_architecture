@@ -168,7 +168,7 @@ src/tasks/toggleFavorite/                 # общие таски (как src/co
   ```
   server/
     main.ts  app.ts                         # Hono app, cors, роуты подключаются тут
-    routes/shows.ts  routes/favorites.ts    # «презентер»: парсинг → таска → статус
+    routes/shows/  routes/favorites/  routes/utils/handleError/   # «презентер»: парсинг → таска → статус (D-67)
     tasks/searchShows/  searchShows.ts + utils/{filterByGenre,countGenres,paginate}/   # раскладка D-65
     tasks/addToFavorites/  removeFromFavorites/  getFavorites/
     tasks/getOrLoad/  tasks/fetchWithCache/  # кеш 5 мин
@@ -223,5 +223,5 @@ src/tasks/toggleFavorite/                 # общие таски (как src/co
 
 - `pnpm check` зелёный (format, typecheck фронта и сервера, lint, check:arch, Vitest фронта и сервера).
 - Тесты сервера: кеш (hit, expire, ошибка), `searchShows` (фильтр, пагинация, счётчики жанров, `isFavorite`), избранное (add/remove идемпотентны, счётчик).
-- Ручная проверка через preview (`dev` + `server`): поиск `Murder` → 10 шоу, 3 на страницу; `Comedy` → 2; повторный поиск в пределах 5 минут не идёт в TVmaze (лог сервера); звезда → toast и счётчик +1; переход на `/#/favorites` и обратно кнопкой «Назад» возвращает ту же выдачу (q, жанр, страница); удаление на странице избранного работает; во втором профиле браузера своё, пустое избранное; ошибка сервера → состояние ошибки с повтором.
+- Ручная проверка через preview (`dev` + `server`): поиск `Murder` → 10 шоу, 3 на страницу; `Comedy` → 1 (на 2026-11-27, выдача TVmaze меняется); повторный поиск в пределах 5 минут не идёт в TVmaze (тест `routes/shows/shows.test.ts`); звезда → toast и счётчик +1; переход на `/#/favorites` и обратно кнопкой «Назад» возвращает ту же выдачу (q, жанр, страница); удаление на странице избранного работает; во втором профиле браузера своё, пустое избранное; ошибка сервера → состояние ошибки с повтором.
 - После деплоя: `curl https://api.<домен>/api/shows?q=murder` отвечает JSON с валидным сертификатом; фронт на Pages ходит в API без ошибок CORS и mixed content.

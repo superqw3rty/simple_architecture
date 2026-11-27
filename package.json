@@ -9,7 +9,7 @@
   },
   "packageManager": "pnpm@12.15.0",
   "scripts": {
-    "dev": "pnpm run \"/^dev:/\"",
+    "dev": "pnpm run --stream \"/^dev:/\"",
     "dev:client": "vite",
     "dev:server": "node --watch --env-file-if-exists=.env  server/main.ts",
     "start": "node server/main.ts",
